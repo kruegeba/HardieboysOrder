@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_root"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:orientation="vertical"
+    android:padding="20px">
+
+    <TextView
+        android:id="@+id/editItemDescriptionTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:text="Description"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <EditText
+        android:id="@+id/editItemDescriptionEditView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="50px"
+        android:textSize="20sp"
+        android:imeOptions="actionDone"
+        android:singleLine="true"/>
+
+    <TextView
+        android:id="@+id/editItemCodeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:text="Code"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <EditText
+        android:id="@+id/editItemCodeEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="50px"
+        android:textSize="20sp"
+        android:imeOptions="actionDone"
+        android:singleLine="true"/>
+
+    <TextView
+        android:id="@+id/editItemPriceTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:text="Price"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <EditText
+        android:id="@+id/editItemPriceEditText"
+        android:inputType="numberDecimal"
+        android:imeOptions="actionDone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="50px"
+        android:textSize="20sp"
+        />
+
+    <TextView
+        android:id="@+id/editItemIconTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:text="Icon"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <ImageButton
+        android:layout_width="400px"
+        android:layout_height="360px"
+        android:layout_marginBottom="40px"
+        android:id="@+id/editItemIconImageButton"
+        android:layout_below="@+id/iconTextView"
+        android:layout_toEndOf="@+id/itemListView" />
+
+</LinearLayout>

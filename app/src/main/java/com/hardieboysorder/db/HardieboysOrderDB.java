@@ -229,6 +229,21 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         db.close();
     }
 
+    public void decreaseIconOrders(Item item){
+        ArrayList<Item> x = getAllActiveItems();
+
+        // 1. get reference to writable DB
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        String sql = "UPDATE Item SET IconOrder = IconOrder - 1 WHERE IconOrder > " + item.getIconOrder();
+
+        db.execSQL(sql);
+
+        x = getAllActiveItems();
+
+        db.close();
+    }
+
     public void addInvoice(Invoice invoice){
         // 1. get reference to writable DB
         SQLiteDatabase db = this.getWritableDatabase();
@@ -495,15 +510,15 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
     }
 
     public void addTestData(){
-        addItem(new Item("DGB330", "Dry Ginger Beer", 3.50, "drygingerbeer.png".getBytes(), 1, 1));
-        addItem(new Item("L330", "Lemonade", 3.50, "lemonade.png".getBytes(), 2, 1));
-        addItem(new Item("LIME330", "Lime", 3.50, "lime.png".getBytes(), 3, 1));
-        addItem(new Item("OJ2.5L", "Orange Juice 2.5 Litres", 18.75, "oj25litres.png".getBytes(), 4, 1));
-        addItem(new Item("OJ2L", "Orange Juice 2 Litres", 15.00, "oj2litres.png".getBytes(), 5, 1));
-        addItem(new Item("RGB330", "Regular Ginger Beer", 3.50, "regulargingerbeer.png".getBytes(), 6, 1));
-        addItem(new Item("TANG2.5", "Tangelo Juice 2.5 Litres", 22.50, "tangelo25litres.png".getBytes(), 7, 1));
-        addItem(new Item("TANG2", "Tangelo Juice 2 Litres", 18.00, "tangelo2litres.png".getBytes(), 8, 1));
-        addItem(new Item("FRT5", "Freight at $5.00", 5.00, "freightat5.png".getBytes(), 9, 1));
+        addItem(new Item("DGB330", "Dry Ginger Beer", 3.50, null, 1, 1));
+        addItem(new Item("L330", "Lemonade", 3.50, null, 2, 1));
+        addItem(new Item("LIME330", "Lime", 3.50, null, 3, 1));
+        addItem(new Item("OJ2.5L", "Orange Juice 2.5 Litres", 18.75, null, 4, 1));
+        addItem(new Item("OJ2L", "Orange Juice 2 Litres", 15.00, null, 5, 1));
+        addItem(new Item("RGB330", "Regular Ginger Beer", 3.50, null, 6, 1));
+        addItem(new Item("TANG2.5", "Tangelo Juice 2.5 Litres", 22.50, null, 7, 1));
+        addItem(new Item("TANG2", "Tangelo Juice 2 Litres", 18.00, null, 8, 1));
+        addItem(new Item("FRT5", "Freight at $5.00", 5.00, null, 9, 1));
 
         addInvoice(new Invoice(3, "Credit Card", 10.50, new Date()));
 
@@ -531,5 +546,39 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         db.close();
 
         return result;
+    }
+
+    public ArrayList<Item> getItemsWithNoIconOrder() {
+        ArrayList<Item> items = new ArrayList<Item>();
+
+        // 1. build the query
+        String query = "SELECT ItemID, Code, Description, Price, Icon, IconOrder, IsActive FROM Item WHERE IsActive = 1 AND IconOrder = 0 ORDER BY Code COLLATE NOCASE";
+
+        // 2. get reference to writable DB
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(query, null);
+
+        // 3. go over each row, build book and add it to list
+        Item item = null;
+        if (cursor.moveToFirst()) {
+            do {
+                item = new Item();
+                item.setItemID(cursor.getInt(0));
+                item.setCode(cursor.getString(1));
+                item.setDescription(cursor.getString(2));
+                item.setPrice(cursor.getDouble(3));
+                item.setIcon(cursor.getBlob(4));
+                item.setIconOrder(cursor.getInt(5));
+                item.setIsActive(cursor.getInt(6));
+
+                // Add book to books
+                items.add(item);
+            } while (cursor.moveToNext());
+        }
+
+        db.close();
+
+        // return books
+        return items;
     }
 }

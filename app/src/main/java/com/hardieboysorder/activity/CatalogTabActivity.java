@@ -46,9 +46,15 @@ public class CatalogTabActivity extends Activity {
         db = new HardieboysOrderDB(this);
 
         loadWidgets();
-        loadAllItems();
 
         makeWidgetsVisible(false);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        loadAllItems();
     }
 
     private void loadWidgets(){
@@ -100,6 +106,12 @@ public class CatalogTabActivity extends Activity {
     //Delete item from all necessary places and update itemListView
     private void deleteItem(Item item){
 
+        //We also need to decrease by 1 every item's icon order that is greater than the deleted
+        //items so that they will still fit with the new amount of item buttons on the invoices tab.
+        if(item.getIconOrder() > 0) {
+            db.decreaseIconOrders(item);
+        }
+
         //In order to maintain historical item data, we need to first check if the item
         //is used on any invoice/invoiceItems.  If it is not, then we can straight up delete it, but
         //if it is used on at least one invoice we have to flip the IsActive switch to false.
@@ -110,9 +122,7 @@ public class CatalogTabActivity extends Activity {
             db.deleteItem(item);
         }
 
-        itemListAdapter.remove(item);
-        itemListAdapter.notifyDataSetChanged();
-
+        loadAllItems();
         makeWidgetsVisible(false);
     }
 
@@ -258,7 +268,7 @@ public class CatalogTabActivity extends Activity {
                         newItem.setDescription(descriptionEditText.getText().toString());
                         newItem.setCode(codeEditText.getText().toString());
                         newItem.setPrice(FormatPriceString(priceEditText.getText().toString()));
-                        if (((BitmapDrawable) editItemIconImageButton.getDrawable()).getBitmap() != null) {
+                        if(editItemIconImageButton.getDrawable() != null) {
                             newItem.setIcon(getBytes(((BitmapDrawable) editItemIconImageButton.getDrawable()).getBitmap()));
                         }
                         newItem.setIconOrder(originalItem.getIconOrder());
@@ -268,14 +278,13 @@ public class CatalogTabActivity extends Activity {
                         if (!originalItem.getDescription().equals(newItem.getDescription()) || !originalItem.getCode().equals(newItem.getCode()) ||
                                 originalItem.getPrice() != newItem.getPrice()) {
                             updateBusinessSignificantItem(newItem);
-                            loadAllItems();
-                            itemEditDialog.dismiss();
                         } else {
                             db.updateItem(newItem);
                             showItemInformation(newItem);
-                            loadAllItems();
-                            itemEditDialog.dismiss();
                         }
+
+                        loadAllItems();
+                        itemEditDialog.dismiss();
                     }
                 } else {
                     if (validateItemInfo(descriptionEditText.getText().toString(), codeEditText.getText().toString(), priceEditText.getText().toString())) {

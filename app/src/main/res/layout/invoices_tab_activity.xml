@@ -18,66 +18,20 @@
         </RelativeLayout>
     </ScrollView>
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+    <HorizontalScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/horizontalScrollView"
         android:layout_below="@+id/scrollView"
-        android:layout_alignStart="@+id/scrollView"
-        android:padding="20px">
+        android:layout_alignStart="@+id/scrollView">
 
-        <Button
-            android:layout_width="160px"
-            android:layout_height="match_parent"
-            android:text="1"
-            android:id="@+id/button" />
+            <LinearLayout
+                android:id="@+id/numberButtonLayout"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignStart="@+id/horizontalScrollView"
+                android:padding="20px"/>
 
-        <Button
-            android:layout_width="160px"
-            android:layout_height="match_parent"
-            android:text="2"
-            android:id="@+id/button2" />
-        <Button
-            android:layout_width="160px"
-            android:layout_height="match_parent"
-            android:text="3"
-            android:id="@+id/button3" />
-        <Button
-            android:layout_width="160px"
-            android:layout_height="match_parent"
-            android:text="4"
-            android:id="@+id/button4" />
-        <Button
-            android:layout_width="160px"
-            android:layout_height="match_parent"
-            android:text="5"
-            android:id="@+id/button5" />
-        <Button
-            android:layout_width="160px"
-            android:layout_height="match_parent"
-            android:text="6"
-            android:id="@+id/button6" />
-        <Button
-        android:layout_width="160px"
-        android:layout_height="match_parent"
-        android:text="7"
-        android:id="@+id/button7" />
-        <Button
-            android:layout_width="160px"
-            android:layout_height="match_parent"
-            android:text="8"
-            android:id="@+id/button8" />
-        <Button
-            android:layout_width="160px"
-            android:layout_height="match_parent"
-            android:text="9"
-            android:id="@+id/button9" />
-        <Button
-            android:layout_width="215px"
-            android:layout_height="match_parent"
-            android:text="Other"
-            android:id="@+id/button10" />
-    </LinearLayout>
-
-
+    </HorizontalScrollView>
 </RelativeLayout>

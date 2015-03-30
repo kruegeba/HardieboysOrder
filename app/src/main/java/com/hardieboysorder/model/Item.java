@@ -26,6 +26,20 @@ public class Item {
         return this.description;
     }
 
+    public boolean equals(Item item){
+        if(this.itemID == item.getItemID() &&
+                this.code == item.getCode() &&
+                this.description == item.getDescription() &&
+                this.price == item.getPrice() &&
+                this.icon == item.getIcon() &&
+                this.iconOrder == item.getIconOrder() &&
+                this.isActive == item.getIsActive()){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
     public int getItemID() {
         return itemID;
     }

@@ -34,4 +34,90 @@
                 android:padding="20px"/>
 
     </HorizontalScrollView>
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_margin="20px"
+        android:layout_toStartOf="@+id/scrollView">
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/backImageButton"
+            android:src="@drawable/ic_action_back"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true" />
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/forwardImageButton"
+            android:src="@drawable/ic_action_forward"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true" />
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14pt"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:id="@+id/invoiceIDTextView"
+            android:layout_alignParentTop="true"
+            android:layout_toEndOf="@+id/backImageButton"
+            android:layout_alignBottom="@+id/backImageButton"
+            android:layout_alignParentStart="true" />
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/contactImageButton"
+            android:src="@drawable/ic_action_person"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/backImageButton"/>
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14pt"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:id="@+id/contactTextView"
+            android:layout_alignTop="@+id/contactImageButton"
+            android:layout_alignBottom="@+id/contactImageButton"
+            android:layout_toEndOf="@+id/contactImageButton" />
+
+        <ListView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/invoiceItemListView"
+            android:layout_below="@+id/contactImageButton"
+            android:layout_toStartOf="@+id/forwardImageButton"
+            android:layout_alignParentEnd="true"
+            android:layout_above="@+id/discountImageButton" />
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/discountImageButton"
+            android:src="@drawable/ic_action_new"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"
+            />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Print"
+            android:id="@+id/printButton"
+            android:layout_toRightOf="@+id/discountImageButton"
+            android:layout_alignParentBottom="true"
+            android:layout_alignTop="@+id/discountImageButton"
+            android:layout_alignParentEnd="true" />
+
+    </RelativeLayout>
+
 </RelativeLayout>

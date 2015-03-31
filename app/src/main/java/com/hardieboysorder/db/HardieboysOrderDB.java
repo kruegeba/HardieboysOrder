@@ -520,7 +520,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         addItem(new Item("TANG2", "Tangelo Juice 2 Litres", 18.00, null, 8, 1));
         addItem(new Item("FRT5", "Freight at $5.00", 5.00, null, 9, 1));
 
-        addInvoice(new Invoice(3, "Credit Card", 10.50, new Date()));
+        //addInvoice(new Invoice(3, "Credit Card", 10.50, new Date()));
 
         addInvoiceItem(new InvoiceItem(1, 1, 3, 0, 10.50));
         addInvoiceItem(new InvoiceItem(1, 1, 4, 0, 18.75));
@@ -580,5 +580,40 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
 
         // return books
         return items;
+    }
+
+    public Invoice getMostRecentInvoice(){
+
+        Invoice invoice = null;
+        String[] columns = {"InvoiceID", "ContactID", "Type", "GrandTotal", "Date"};
+
+        // 1. get reference to readable DB
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String sql = "SELECT InvoiceID, ContactID, Type, GrandTotal, Date FROM Invoice ORDER BY InvoiceID ASC LIMIT 1";
+
+        // 2. build query
+        Cursor cursor = db.rawQuery(sql, null);
+
+        // 3. if we got results get the first one
+        if(cursor.getCount() > 0) {
+            cursor.moveToFirst();
+
+            invoice = new Invoice();
+            invoice.setInvoiceID(cursor.getInt(0));
+            invoice.setContactID(cursor.getInt(1));
+            invoice.setType(cursor.getString(2));
+            invoice.setGrandTotal(cursor.getDouble(3));
+            try {
+                invoice.setDate(new SimpleDateFormat("MM/dd/yyyy HH:mm:ss", Locale.ENGLISH).parse(cursor.getString(4)));
+            } catch (Exception e) {
+                //Ignore for now
+            }
+        }
+
+        db.close();
+
+        // 5. return
+        return invoice;
     }
 }

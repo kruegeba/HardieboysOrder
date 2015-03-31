@@ -36,6 +36,7 @@ public class ItemButton extends Button{
         if(item.getIcon() != null){
             this.setBackground(new BitmapDrawable(getResources(), getImage(item.getIcon())));
         }else{
+            this.setTextSize(30);
             this.setText(item.getCode());
         }
     }

@@ -12,8 +12,8 @@ public class Invoice {
 
     public Invoice(){}
 
-    public Invoice(int invoiceID, String type, double grandTotal, Date date){
-        this.invoiceID = invoiceID;
+    public Invoice(int contactID, String type, double grandTotal, Date date){
+        this.contactID = contactID;
         this.type = type;
         this.grandTotal = grandTotal;
         this.date = date;

@@ -2,26 +2,28 @@ package com.hardieboysorder.activity;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.hardieboysorder.R;
 import com.hardieboysorder.db.HardieboysOrderDB;
+import com.hardieboysorder.model.Invoice;
 import com.hardieboysorder.model.Item;
 import com.hardieboysorder.widget.ItemButton;
 import com.hardieboysorder.widget.NumberButton;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 public class InvoicesTabActivity extends Activity {
 
@@ -29,6 +31,10 @@ public class InvoicesTabActivity extends Activity {
     RelativeLayout itemButtonLayout;
     LinearLayout numberButtonLayout;
     ItemButton pressedItemButton;
+    Invoice currentInvoice;
+    TextView invoiceIDTextView, contactTextView;
+    ImageButton backImagebutton, forwardImageButton, contactImageButton, discountImageButton;
+    Button printButton;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,6 +43,7 @@ public class InvoicesTabActivity extends Activity {
         db = new HardieboysOrderDB(this);
         //db.addTestData();
 
+        loadInvoiceWidgets();
         loadNumberButtons();
     }
 
@@ -44,8 +51,16 @@ public class InvoicesTabActivity extends Activity {
     public void onResume() {
         super.onResume();
 
-        //Reload the item buttons on each "onResume" in case item details where changed on the catalog tab.
         loadItemButtons();
+        loadMostRecentInvoice();
+    }
+
+    private void loadInvoiceWidgets(){
+        backImagebutton = (ImageButton)findViewById(R.id.backImageButton);
+        invoiceIDTextView = (TextView)findViewById(R.id.invoiceIDTextView);
+        forwardImageButton = (ImageButton)findViewById(R.id.forwardImageButton);
+        contactImageButton = (ImageButton)findViewById(R.id.contactImageButton);
+        contactTextView = (TextView)findViewById(R.id.contactTextView);
     }
 
     private void loadItemButtons() {
@@ -146,6 +161,22 @@ public class InvoicesTabActivity extends Activity {
         numberButtonLayout.addView(new NumberButton(this, "*"));
     }
 
+    private void loadMostRecentInvoice(){
+        currentInvoice = db.getMostRecentInvoice();
+
+        if(currentInvoice == null){
+            currentInvoice = new Invoice(-1, null, 0, new Date());
+            db.addInvoice(currentInvoice);
+        }
+
+        invoiceIDTextView.setText("#" + currentInvoice.getInvoiceID());
+
+    }
+
+    private void loadInvoiceItems(int invoiceID){
+
+    }
+
     private void showItemAssignDialog(View v){
         final ItemButton selectedItemButton = (ItemButton)v;
 
@@ -196,4 +227,5 @@ public class InvoicesTabActivity extends Activity {
 
         itemAssignDialog.show();
     }
+
 }

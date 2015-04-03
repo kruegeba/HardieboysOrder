@@ -2,7 +2,13 @@ package com.hardieboysorder.activity;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +24,7 @@ import android.widget.TextView;
 import com.hardieboysorder.R;
 import com.hardieboysorder.db.HardieboysOrderDB;
 import com.hardieboysorder.model.Invoice;
+import com.hardieboysorder.model.InvoiceItem;
 import com.hardieboysorder.model.Item;
 import com.hardieboysorder.widget.ItemButton;
 import com.hardieboysorder.widget.NumberButton;
@@ -28,13 +35,18 @@ import java.util.Date;
 public class InvoicesTabActivity extends Activity {
 
     HardieboysOrderDB db;
+    TextView invoiceTextView, contactTextView, dateTextView;
+    ListView invoiceItemListView;
+    ArrayAdapter<InvoiceItem> invoiceItemAdapter;
+    ImageButton backImageButton, forwardImageButton, contactImageButton, printImageButton;
     RelativeLayout itemButtonLayout;
     LinearLayout numberButtonLayout;
     ItemButton pressedItemButton;
+    NumberButton pressedNumberButton;
     Invoice currentInvoice;
-    TextView invoiceIDTextView, contactTextView;
-    ImageButton backImagebutton, forwardImageButton, contactImageButton, discountImageButton;
-    Button printButton;
+    int mostRecentInvoiceID;
+    boolean comingFromContactSelect = false;
+
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,7 +55,8 @@ public class InvoicesTabActivity extends Activity {
         db = new HardieboysOrderDB(this);
         //db.addTestData();
 
-        loadInvoiceWidgets();
+        initializeViews();
+        initializeClickEvents();
         loadNumberButtons();
     }
 
@@ -51,16 +64,66 @@ public class InvoicesTabActivity extends Activity {
     public void onResume() {
         super.onResume();
 
-        loadItemButtons();
-        loadMostRecentInvoice();
+        if(!comingFromContactSelect) {
+            loadItemButtons();
+            loadMostRecentInvoice();
+            loadInvoiceItems();
+            handleNavButtons();
+            comingFromContactSelect = false;
+        }
     }
 
-    private void loadInvoiceWidgets(){
-        backImagebutton = (ImageButton)findViewById(R.id.backImageButton);
-        invoiceIDTextView = (TextView)findViewById(R.id.invoiceIDTextView);
+    private void initializeViews(){
+        invoiceTextView = (TextView)findViewById(R.id.invoiceTextView);
+        contactTextView = (TextView)findViewById(R.id.contactTextView);
+        dateTextView = (TextView)findViewById(R.id.dateTextView);
+        invoiceItemListView = (ListView)findViewById(R.id.invoiceItemListView);
+        backImageButton = (ImageButton)findViewById(R.id.backImageButton);
         forwardImageButton = (ImageButton)findViewById(R.id.forwardImageButton);
         contactImageButton = (ImageButton)findViewById(R.id.contactImageButton);
-        contactTextView = (TextView)findViewById(R.id.contactTextView);
+        printImageButton = (ImageButton)findViewById(R.id.printImageButton);
+    }
+
+    private void initializeClickEvents(){
+        backImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(currentInvoice.getInvoiceID() != 1){
+                    loadInvoice(db.getInvoice(currentInvoice.getInvoiceID() - 1));
+                    loadInvoiceItems();
+                }
+
+                handleNavButtons();
+            }
+        });
+
+        forwardImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(currentInvoice.getInvoiceID() == mostRecentInvoiceID){
+                    if(currentInvoice.getContactID() != -1 || invoiceItemAdapter.getCount() > 0){
+                        Invoice newInvoice = new Invoice(-1, 0, new Date());
+
+                        db.addInvoice(newInvoice);
+                        loadMostRecentInvoice();
+                        loadInvoiceItems();
+                        handleNavButtons();
+                    }
+                }else{
+                    loadInvoice(db.getInvoice(currentInvoice.getInvoiceID() + 1));
+                    loadInvoiceItems();
+                    handleNavButtons();
+                }
+            }
+        });
+
+        contactImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+                startActivityForResult(intent, 3);
+            }
+        });
     }
 
     private void loadItemButtons() {
@@ -114,13 +177,33 @@ public class InvoicesTabActivity extends Activity {
                             //it is different, or un-select if it is the same button.
                             if (pressedItemButton.getItem().equals(selectedItemButton.getItem())) {
                                 pressedItemButton = null;
+                                selectedItemButton.getBackground().setAlpha(255);
                             } else {
+                                pressedItemButton.getBackground().setAlpha(255);
                                 pressedItemButton = selectedItemButton;
+                                selectedItemButton.getBackground().setAlpha(128);
                             }
                         } else {
                             //Assign as selected item button and then check if number button has also been
                             //selected. Add new invoice item if both buttons have been selected.
                             pressedItemButton = selectedItemButton;
+                            selectedItemButton.getBackground().setAlpha(128);
+
+                            if (pressedItemButton != null && pressedNumberButton != null) {
+                                InvoiceItem newInvoiceItem = new InvoiceItem();
+                                newInvoiceItem.setInvoiceID(currentInvoice.getInvoiceID());
+                                newInvoiceItem.setItemID(pressedItemButton.getItem().getItemID());
+                                newInvoiceItem.setQuantity(pressedNumberButton.getNumber());
+                                newInvoiceItem.setTotal(pressedItemButton.getItem().getPrice() * newInvoiceItem.getQuantity());
+                                db.addInvoiceItem(newInvoiceItem);
+
+                                pressedItemButton.getBackground().setAlpha(255);
+                                pressedItemButton = null;
+                                pressedNumberButton.getBackground().setAlpha(255);
+                                pressedNumberButton = null;
+
+                                loadInvoiceItems();
+                            }
                         }
                     }
                 }
@@ -156,25 +239,86 @@ public class InvoicesTabActivity extends Activity {
         numberButtonLayout = (LinearLayout)findViewById(R.id.numberButtonLayout);
 
         for(int i = 1; i < 21; i++){
-            numberButtonLayout.addView(new NumberButton(this, i));
+            NumberButton newNumberButton = new NumberButton(this, i);
+            newNumberButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    NumberButton selectedNumberButton = (NumberButton) v;
+
+                    if (pressedNumberButton != null) {
+                        //A number button has already been selected so switch to new item if
+                        //it is different, or un-select if it is the same button.
+                        if (pressedNumberButton.getNumber() == selectedNumberButton.getNumber()) {
+                            pressedNumberButton = null;
+                            selectedNumberButton.getBackground().setAlpha(255);
+                        } else {
+                            pressedNumberButton.getBackground().setAlpha(255);
+                            pressedNumberButton = selectedNumberButton;
+                            selectedNumberButton.getBackground().setAlpha(128);
+                        }
+                    } else {
+                        //Assign as selected item button and then check if number button has also been
+                        //selected. Add new invoice item if both buttons have been selected.
+                        pressedNumberButton = selectedNumberButton;
+                        pressedNumberButton.getBackground().setAlpha(128);
+
+                        if (pressedItemButton != null && pressedNumberButton != null) {
+                            InvoiceItem newInvoiceItem = new InvoiceItem();
+                            newInvoiceItem.setInvoiceID(currentInvoice.getInvoiceID());
+                            newInvoiceItem.setItemID(pressedItemButton.getItem().getItemID());
+                            newInvoiceItem.setQuantity(pressedNumberButton.getNumber());
+                            newInvoiceItem.setTotal(pressedItemButton.getItem().getPrice() * newInvoiceItem.getQuantity());
+                            db.addInvoiceItem(newInvoiceItem);
+
+                            pressedItemButton.getBackground().setAlpha(255);
+                            pressedItemButton = null;
+                            pressedNumberButton.getBackground().setAlpha(255);
+                            pressedNumberButton = null;
+
+                            loadInvoiceItems();
+                        }
+                    }
+                }
+            });
+            numberButtonLayout.addView(newNumberButton);
         }
         numberButtonLayout.addView(new NumberButton(this, "*"));
+
+
     }
 
     private void loadMostRecentInvoice(){
         currentInvoice = db.getMostRecentInvoice();
 
         if(currentInvoice == null){
-            currentInvoice = new Invoice(-1, null, 0, new Date());
+            currentInvoice = new Invoice(1, -1, 0, new Date());
             db.addInvoice(currentInvoice);
         }
 
-        invoiceIDTextView.setText("#" + currentInvoice.getInvoiceID());
-
+        invoiceTextView.setText("#" + currentInvoice.getInvoiceID());
+        contactTextView.setText(getContactName(currentInvoice.getContactID()));
+        dateTextView.setText(currentInvoice.getDate().toString());
+        mostRecentInvoiceID = currentInvoice.getInvoiceID();
     }
 
-    private void loadInvoiceItems(int invoiceID){
+    private void loadInvoice(Invoice invoice){
+        currentInvoice = invoice;
+        invoiceTextView.setText("#" + currentInvoice.getInvoiceID());
+        contactTextView.setText(getContactName(currentInvoice.getContactID()));
+        dateTextView.setText(currentInvoice.getDate().toString());
+    }
 
+    private void loadInvoiceItems(){
+        invoiceItemAdapter = new ArrayAdapter<InvoiceItem>(this, R.layout.listview_row, db.getInvoiceItemsForInvoice(currentInvoice.getInvoiceID()));
+        invoiceItemListView.setAdapter(invoiceItemAdapter);
+    }
+
+    private void handleNavButtons(){
+        if(currentInvoice.getInvoiceID() == mostRecentInvoiceID){
+            forwardImageButton.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_action_new));
+        }else{
+            forwardImageButton.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_action_forward));
+        }
     }
 
     private void showItemAssignDialog(View v){
@@ -226,6 +370,53 @@ public class InvoicesTabActivity extends Activity {
         itemAssignListView.setAdapter(itemDesignAdapter);
 
         itemAssignDialog.show();
+    }
+
+    @Override public void onActivityResult(int reqCode, int resultCode, Intent data){ super.onActivityResult(reqCode, resultCode, data);
+
+        switch(reqCode)
+        {
+            case (3):
+                if (resultCode == Activity.RESULT_OK)
+                {
+                    Uri contactData = data.getData();
+                    Cursor c = managedQuery(contactData, null, null, null, null);
+                    //Cursor c = getContentResolver().query(ContactsContract.Data.CONTENT_URI, new String[] {ContactsContract.Data.DATA1}, ContactsContract.Data.CONTACT_ID + " = " + 1, null, null);
+                    if (c.moveToFirst())
+                    {
+                        String id = c.getString(c.getColumnIndexOrThrow(ContactsContract.Contacts._ID));
+                        currentInvoice.setContactID(Integer.parseInt(id));
+                        db.updateInvoice(currentInvoice);
+                        contactTextView.setText(getContactName(currentInvoice.getContactID()));
+                        //String q = c.getString(c.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+                        comingFromContactSelect = true;
+                    }
+                }
+        }
+    }
+
+    private String getContactName(int contactID){
+        String name = "";
+
+        if(contactID > 0){
+            // Build the Uri to query to table
+            Uri myPhoneUri = Uri.withAppendedPath(
+                    ContactsContract.Contacts.CONTENT_URI, contactID + "");
+
+            // Query the table
+            Cursor phoneCursor = managedQuery(
+                    myPhoneUri, null, null, null, null);
+
+            // Get the phone numbers from the contact
+            for (phoneCursor.moveToFirst(); !phoneCursor.isAfterLast(); phoneCursor.moveToNext()) {
+
+                // Get a phone number
+                //String phoneNumber = phoneCursor.getString(phoneCursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                name = phoneCursor.getString(phoneCursor.getColumnIndexOrThrow(ContactsContract.Contacts.DISPLAY_NAME));
+            }
+        }
+
+        return name;
     }
 
 }

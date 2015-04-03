@@ -25,4 +25,8 @@ public class NumberButton extends Button {
         this.setText(text);
     }
 
+    public int getNumber(){
+        return this.number;
+    }
+
 }

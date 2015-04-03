@@ -8,6 +8,7 @@ public class InvoiceItem {
     private int quantity;
     private int discount;
     private double total;
+    private Item item;
 
     public InvoiceItem(){}
 
@@ -17,6 +18,24 @@ public class InvoiceItem {
         this.quantity = quantity;
         this.discount = discount;
         this.total = total;
+    }
+
+    @Override
+    public String toString(){
+        String quantityString, descriptionString, totalString;
+
+        quantityString = quantity + "";
+        int padLength = 10 - quantityString.length();
+        while(quantityString.length() < padLength){
+            quantityString += " ";
+        }
+
+        descriptionString = item.getDescription();
+        if(descriptionString.length() > 20){
+            descriptionString = descriptionString.substring(0, 20);
+        }
+
+        return quantityString + descriptionString + "   $" + String.format("%.2f", total);
     }
 
     public int getInvoiceItemID() {
@@ -66,4 +85,8 @@ public class InvoiceItem {
     public void setTotal(double total) {
         this.total = total;
     }
+
+    public void setItem(Item item){this.item = item;}
+
+    public Item getItem(){return this.item;}
 }

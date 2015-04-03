@@ -6,17 +6,20 @@ public class Invoice {
 
     private int invoiceID;
     private int contactID;
-    private String type;
     private double grandTotal;
     private Date date;
 
-    public Invoice(){}
+    public Invoice(){ }
 
-    public Invoice(int contactID, String type, double grandTotal, Date date){
+    public Invoice(int contactID, double grandTotal, Date date){
         this.contactID = contactID;
-        this.type = type;
         this.grandTotal = grandTotal;
         this.date = date;
+    }
+
+    public Invoice(int invoiceID, int contactID, double grandTotal, Date date){
+        this(contactID, grandTotal, date);
+        this.invoiceID = invoiceID;
     }
 
     public int getInvoiceID() {
@@ -33,14 +36,6 @@ public class Invoice {
 
     public void setContactID(int contactID) {
         this.contactID = contactID;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public double getGrandTotal() {

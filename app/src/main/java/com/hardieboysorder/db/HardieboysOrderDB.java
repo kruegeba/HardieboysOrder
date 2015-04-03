@@ -251,7 +251,6 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         // 2. create ContentValues to add key "column"/value
         ContentValues values = new ContentValues();
         values.put("ContactID", invoice.getContactID());
-        values.put("Type", invoice.getType());
         values.put("GrandTotal", invoice.getGrandTotal());
         values.put("Date", new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(invoice.getDate()));
 
@@ -266,7 +265,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
 
     public Invoice getInvoice(int id){
 
-        String[] columns = {"InvoiceID", "ContactID", "Type", "GrandTotal", "Date"};
+        String[] columns = {"InvoiceID", "ContactID", "GrandTotal", "Date"};
 
         // 1. get reference to readable DB
         SQLiteDatabase db = this.getReadableDatabase();
@@ -290,10 +289,9 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         Invoice invoice = new Invoice();
         invoice.setInvoiceID(cursor.getInt(0));
         invoice.setContactID(cursor.getInt(1));
-        invoice.setType(cursor.getString(2));
-        invoice.setGrandTotal(cursor.getDouble(3));
+        invoice.setGrandTotal(cursor.getDouble(2));
         try{
-            invoice.setDate(new SimpleDateFormat("MM/dd/yyyy HH:mm:ss", Locale.ENGLISH).parse(cursor.getString(4)));
+            invoice.setDate(new SimpleDateFormat("MM/dd/yyyy HH:mm:ss", Locale.ENGLISH).parse(cursor.getString(3)));
         }catch(Exception e){
             //Ignore for now
         }
@@ -308,7 +306,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         ArrayList<Invoice> invoices = new ArrayList<Invoice>();
 
         // 1. build the query
-        String query = "SELECT InvoiceID, ContactID, Type, GrandTotal, Date FROM Invoice";
+        String query = "SELECT InvoiceID, ContactID, GrandTotal, Date FROM Invoice";
 
         // 2. get reference to writable DB
         SQLiteDatabase db = this.getWritableDatabase();
@@ -321,10 +319,9 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
                 invoice = new Invoice();
                 invoice.setInvoiceID(cursor.getInt(0));
                 invoice.setContactID(cursor.getInt(1));
-                invoice.setType(cursor.getString(2));
-                invoice.setGrandTotal(cursor.getDouble(3));
+                invoice.setGrandTotal(cursor.getDouble(2));
                 try{
-                    invoice.setDate(new SimpleDateFormat("MM/dd/yyyy HH:mm:ss", Locale.ENGLISH).parse(cursor.getString(4)));
+                    invoice.setDate(new SimpleDateFormat("MM/dd/yyyy HH:mm:ss", Locale.ENGLISH).parse(cursor.getString(3)));
                 }catch(Exception e){
                     //Ignore for now
                 }
@@ -348,7 +345,6 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         // 2. create ContentValues to add key "column"/value
         ContentValues values = new ContentValues();
         values.put("ContactID", invoice.getContactID());
-        values.put("Type", invoice.getType());
         values.put("GrandTotal", invoice.getGrandTotal());
         values.put("Date", new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(invoice.getDate()));
 
@@ -585,12 +581,12 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
     public Invoice getMostRecentInvoice(){
 
         Invoice invoice = null;
-        String[] columns = {"InvoiceID", "ContactID", "Type", "GrandTotal", "Date"};
+        String[] columns = {"InvoiceID", "ContactID", "GrandTotal", "Date"};
 
         // 1. get reference to readable DB
         SQLiteDatabase db = this.getReadableDatabase();
 
-        String sql = "SELECT InvoiceID, ContactID, Type, GrandTotal, Date FROM Invoice ORDER BY InvoiceID ASC LIMIT 1";
+        String sql = "SELECT InvoiceID, ContactID, GrandTotal, Date FROM Invoice ORDER BY InvoiceID DESC LIMIT 1";
 
         // 2. build query
         Cursor cursor = db.rawQuery(sql, null);
@@ -602,10 +598,9 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
             invoice = new Invoice();
             invoice.setInvoiceID(cursor.getInt(0));
             invoice.setContactID(cursor.getInt(1));
-            invoice.setType(cursor.getString(2));
-            invoice.setGrandTotal(cursor.getDouble(3));
+            invoice.setGrandTotal(cursor.getDouble(2));
             try {
-                invoice.setDate(new SimpleDateFormat("MM/dd/yyyy HH:mm:ss", Locale.ENGLISH).parse(cursor.getString(4)));
+                invoice.setDate(new SimpleDateFormat("MM/dd/yyyy HH:mm:ss", Locale.ENGLISH).parse(cursor.getString(3)));
             } catch (Exception e) {
                 //Ignore for now
             }
@@ -616,4 +611,41 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         // 5. return
         return invoice;
     }
+
+    public ArrayList<InvoiceItem> getInvoiceItemsForInvoice(int invoiceID) {
+        ArrayList<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
+
+        // 1. build the query
+        String query = "SELECT InvoiceItemID, InvoiceID, ItemID, Quantity, Discount, Total FROM InvoiceItem WHERE InvoiceID = " + invoiceID;
+
+        // 2. get reference to writable DB
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(query, null);
+
+        // 3. go over each row, build book and add it to list
+        InvoiceItem invoiceItem = null;
+        if (cursor.moveToFirst()) {
+            do {
+                invoiceItem = new InvoiceItem();
+                invoiceItem.setInvoiceItemID(cursor.getInt(0));
+                invoiceItem.setInvoiceID(cursor.getInt(1));
+                invoiceItem.setItemID(cursor.getInt(2));
+                invoiceItem.setQuantity(cursor.getInt(3));
+                invoiceItem.setDiscount(cursor.getInt(4));
+                invoiceItem.setTotal(cursor.getDouble(5));
+
+                invoiceItem.setItem(getItem(invoiceItem.getItemID()));
+
+                // Add book to books
+                invoiceItems.add(invoiceItem);
+            } while (cursor.moveToNext());
+        }
+
+        db.close();
+
+        // return books
+        return invoiceItems;
+    }
+
+
 }

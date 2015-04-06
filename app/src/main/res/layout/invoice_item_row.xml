@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="20px">
+
+    <TextView android:id="@+id/quantity"
+        android:layout_width="100px"
+        android:layout_height="wrap_content"
+        android:textSize="25sp"
+        android:textStyle="bold"
+        android:text="1"
+        android:gravity="left"/>
+
+    <TextView android:id="@+id/description"
+        android:layout_width="450px"
+        android:layout_height="wrap_content"
+        android:textSize="25sp"
+        android:textStyle="bold"
+        android:gravity="left"
+        android:text="Regular Ginger Beer"/>
+
+    <TextView android:id="@+id/total"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textSize="25sp"
+        android:textStyle="bold"
+        android:gravity="right"
+        android:text="$3.50"/>
+</LinearLayout>

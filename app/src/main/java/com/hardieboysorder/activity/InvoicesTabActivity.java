@@ -2,10 +2,10 @@ package com.hardieboysorder.activity;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -14,7 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -22,6 +22,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.hardieboysorder.R;
+import com.hardieboysorder.adapter.InvoiceItemAdapter;
 import com.hardieboysorder.db.HardieboysOrderDB;
 import com.hardieboysorder.model.Invoice;
 import com.hardieboysorder.model.InvoiceItem;
@@ -29,22 +30,23 @@ import com.hardieboysorder.model.Item;
 import com.hardieboysorder.widget.ItemButton;
 import com.hardieboysorder.widget.NumberButton;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
 public class InvoicesTabActivity extends Activity {
 
     HardieboysOrderDB db;
-    TextView invoiceTextView, contactTextView, dateTextView;
+    TextView invoiceTextView, contactTextView, dateTextView, invoiceGrandTotalTextView;
     ListView invoiceItemListView;
-    ArrayAdapter<InvoiceItem> invoiceItemAdapter;
+    InvoiceItemAdapter invoiceItemAdapter;
     ImageButton backImageButton, forwardImageButton, contactImageButton, printImageButton;
     RelativeLayout itemButtonLayout;
     LinearLayout numberButtonLayout;
     ItemButton pressedItemButton;
     NumberButton pressedNumberButton;
     Invoice currentInvoice;
-    int mostRecentInvoiceID;
+    int mostRecentInvoiceID, otherItemAmount;
     boolean comingFromContactSelect = false;
 
 
@@ -77,6 +79,7 @@ public class InvoicesTabActivity extends Activity {
         invoiceTextView = (TextView)findViewById(R.id.invoiceTextView);
         contactTextView = (TextView)findViewById(R.id.contactTextView);
         dateTextView = (TextView)findViewById(R.id.dateTextView);
+        invoiceGrandTotalTextView = (TextView)findViewById(R.id.invoiceGrandTotalTextView);
         invoiceItemListView = (ListView)findViewById(R.id.invoiceItemListView);
         backImageButton = (ImageButton)findViewById(R.id.backImageButton);
         forwardImageButton = (ImageButton)findViewById(R.id.forwardImageButton);
@@ -85,6 +88,14 @@ public class InvoicesTabActivity extends Activity {
     }
 
     private void initializeClickEvents(){
+        invoiceItemListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                showDiscountDeleteDialog(view, invoiceItemAdapter.getItem(position));
+                return false;
+            }
+        });
+
         backImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -193,9 +204,21 @@ public class InvoicesTabActivity extends Activity {
                                 InvoiceItem newInvoiceItem = new InvoiceItem();
                                 newInvoiceItem.setInvoiceID(currentInvoice.getInvoiceID());
                                 newInvoiceItem.setItemID(pressedItemButton.getItem().getItemID());
-                                newInvoiceItem.setQuantity(pressedNumberButton.getNumber());
+                                if(otherItemAmount > 0){
+                                    newInvoiceItem.setQuantity(otherItemAmount);
+                                }else{
+                                    newInvoiceItem.setQuantity(pressedNumberButton.getNumber());
+                                }
                                 newInvoiceItem.setTotal(pressedItemButton.getItem().getPrice() * newInvoiceItem.getQuantity());
                                 db.addInvoiceItem(newInvoiceItem);
+
+                                double currentGrandTotal = currentInvoice.getGrandTotal();
+                                currentGrandTotal += newInvoiceItem.getTotal();
+
+                                currentInvoice.setGrandTotal(currentGrandTotal);
+                                db.updateInvoice(currentInvoice);
+
+                                invoiceGrandTotalTextView.setText("$" + String.format("%.2f", currentInvoice.getGrandTotal()));
 
                                 pressedItemButton.getBackground().setAlpha(255);
                                 pressedItemButton = null;
@@ -270,6 +293,14 @@ public class InvoicesTabActivity extends Activity {
                             newInvoiceItem.setTotal(pressedItemButton.getItem().getPrice() * newInvoiceItem.getQuantity());
                             db.addInvoiceItem(newInvoiceItem);
 
+                            double currentGrandTotal = currentInvoice.getGrandTotal();
+                            currentGrandTotal += newInvoiceItem.getTotal();
+
+                            currentInvoice.setGrandTotal(currentGrandTotal);
+                            db.updateInvoice(currentInvoice);
+
+                            invoiceGrandTotalTextView.setText("$" + String.format("%.2f", currentInvoice.getGrandTotal()));
+
                             pressedItemButton.getBackground().setAlpha(255);
                             pressedItemButton = null;
                             pressedNumberButton.getBackground().setAlpha(255);
@@ -282,7 +313,14 @@ public class InvoicesTabActivity extends Activity {
             });
             numberButtonLayout.addView(newNumberButton);
         }
-        numberButtonLayout.addView(new NumberButton(this, "*"));
+        NumberButton otherNumberButton = new NumberButton(this, "*");
+        otherNumberButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showOtherAmountDialog(v);
+            }
+        });
+        numberButtonLayout.addView(otherNumberButton);
 
 
     }
@@ -297,7 +335,8 @@ public class InvoicesTabActivity extends Activity {
 
         invoiceTextView.setText("#" + currentInvoice.getInvoiceID());
         contactTextView.setText(getContactName(currentInvoice.getContactID()));
-        dateTextView.setText(currentInvoice.getDate().toString());
+        dateTextView.setText(new SimpleDateFormat("d-M-yyyy h:mm a").format(currentInvoice.getDate()));
+        invoiceGrandTotalTextView.setText("$" + String.format("%.2f", currentInvoice.getGrandTotal()));
         mostRecentInvoiceID = currentInvoice.getInvoiceID();
     }
 
@@ -305,11 +344,21 @@ public class InvoicesTabActivity extends Activity {
         currentInvoice = invoice;
         invoiceTextView.setText("#" + currentInvoice.getInvoiceID());
         contactTextView.setText(getContactName(currentInvoice.getContactID()));
-        dateTextView.setText(currentInvoice.getDate().toString());
+        dateTextView.setText(new SimpleDateFormat("d-M-yyyy h:mm a").format(currentInvoice.getDate()));
+        invoiceGrandTotalTextView.setText("$" + String.format("%.2f", currentInvoice.getGrandTotal()));
     }
 
     private void loadInvoiceItems(){
-        invoiceItemAdapter = new ArrayAdapter<InvoiceItem>(this, R.layout.listview_row, db.getInvoiceItemsForInvoice(currentInvoice.getInvoiceID()));
+        ArrayList<InvoiceItem> invoiceItems = db.getInvoiceItemsForInvoice(currentInvoice.getInvoiceID());
+        invoiceItemAdapter = new InvoiceItemAdapter(this);
+
+        for(InvoiceItem invoiceItem : invoiceItems){
+            invoiceItemAdapter.add(invoiceItem);
+            if(invoiceItem.getDiscount() > 0){
+                invoiceItemAdapter.add(new InvoiceItem(-22, invoiceItem.getInvoiceItemID(), -1, 0, invoiceItem.getDiscount(), invoiceItem.getTotal()));
+            }
+        }
+
         invoiceItemListView.setAdapter(invoiceItemAdapter);
     }
 
@@ -418,5 +467,136 @@ public class InvoicesTabActivity extends Activity {
 
         return name;
     }
+
+    private void showDiscountDeleteDialog(View view, final InvoiceItem invoiceItem){
+        final AlertDialog invoiceItemDiscountDeleteDialog = new AlertDialog.Builder(this)
+                .setCancelable(true)
+                .setTitle("Invoice Item")
+                .setMessage("What would you like to do with this item?")
+                .setPositiveButton("Cancel", null)
+                .setNegativeButton("Apply Discount", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        showInvoiceItemDiscountDialog(invoiceItem);
+                    }
+                })
+                .setNeutralButton("Delete", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        if(invoiceItem.getInvoiceItemID() == -22){
+                            InvoiceItem invoiceItemWithDiscount = db.getInvoiceItem(invoiceItem.getInvoiceID());
+
+                            currentInvoice.setGrandTotal(currentInvoice.getGrandTotal() + invoiceItem.getDiscountAmount());
+
+                            invoiceItemWithDiscount.setDiscount(0);
+                            db.updateInvoiceItem(invoiceItemWithDiscount);
+                        }else{
+                            if(invoiceItem.getDiscount() > 0){
+                                currentInvoice.setGrandTotal(currentInvoice.getGrandTotal() - (invoiceItem.getTotal() - invoiceItem.getDiscountAmount()));
+                            }else{
+                                currentInvoice.setGrandTotal(currentInvoice.getGrandTotal() - invoiceItem.getTotal());
+                            }
+
+                            db.deleteInvoiceItem(invoiceItem);
+                        }
+
+
+                        db.updateInvoice(currentInvoice);
+                        invoiceGrandTotalTextView.setText("$" + String.format("%.2f", currentInvoice.getGrandTotal()));
+
+                        loadInvoiceItems();
+                    }
+                })
+                .create();
+
+        invoiceItemDiscountDeleteDialog.show();
+    }
+
+    private void showInvoiceItemDiscountDialog(final InvoiceItem invoiceItem){
+        LayoutInflater layoutInflater = LayoutInflater.from(this);
+        View invoiceItemDiscountView = layoutInflater.inflate(R.layout.invoiceitem_discount_dialog, null);
+
+        final EditText discountEditText = (EditText) invoiceItemDiscountView.findViewById(R.id.invoiceItemDiscountEditText);
+
+        final AlertDialog itemEditDialog = new AlertDialog.Builder(this)
+                .setView(invoiceItemDiscountView)
+                .setCancelable(true)
+                .setTitle("Apply Discount %")
+                .setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        invoiceItem.setDiscount(Integer.parseInt(discountEditText.getText().toString()));
+                        double discountAmount = (invoiceItem.getTotal() * ((double)invoiceItem.getDiscount()/100));
+
+                        currentInvoice.setGrandTotal(currentInvoice.getGrandTotal() - discountAmount);
+                        invoiceGrandTotalTextView.setText("$" + String.format("%.2f", currentInvoice.getGrandTotal()));
+
+                        db.updateInvoiceItem(invoiceItem);
+                        db.updateInvoice(currentInvoice);
+
+                        loadInvoiceItems();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .create();
+
+        itemEditDialog.show();
+    }
+
+    private void showOtherAmountDialog(final View v){
+        LayoutInflater layoutInflater = LayoutInflater.from(this);
+        View otherAmountView = layoutInflater.inflate(R.layout.other_amount_dialog, null);
+
+        final EditText otherAmountEditText = (EditText) otherAmountView.findViewById(R.id.otherAmountEditText);
+
+        final AlertDialog itemEditDialog = new AlertDialog.Builder(this)
+                .setView(otherAmountView)
+                .setCancelable(true)
+                .setTitle("Other Item Amount")
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        NumberButton selectedNumberButton = (NumberButton) v;
+                        otherItemAmount = Integer.parseInt(otherAmountEditText.getText().toString());
+
+                        if (pressedNumberButton != null) {
+                            pressedNumberButton.getBackground().setAlpha(255);
+                            pressedNumberButton = selectedNumberButton;
+                            selectedNumberButton.getBackground().setAlpha(128);
+                        } else {
+                            //Assign as selected item button and then check if number button has also been
+                            //selected. Add new invoice item if both buttons have been selected.
+                            pressedNumberButton = selectedNumberButton;
+                            selectedNumberButton.getBackground().setAlpha(128);
+
+                            if (pressedItemButton != null && pressedNumberButton != null) {
+                                InvoiceItem newInvoiceItem = new InvoiceItem();
+                                newInvoiceItem.setInvoiceID(currentInvoice.getInvoiceID());
+                                newInvoiceItem.setItemID(pressedItemButton.getItem().getItemID());
+                                newInvoiceItem.setQuantity(otherItemAmount);
+                                newInvoiceItem.setTotal(pressedItemButton.getItem().getPrice() * newInvoiceItem.getQuantity());
+                                db.addInvoiceItem(newInvoiceItem);
+
+                                double currentGrandTotal = currentInvoice.getGrandTotal();
+                                currentGrandTotal += newInvoiceItem.getTotal();
+
+                                currentInvoice.setGrandTotal(currentGrandTotal);
+                                db.updateInvoice(currentInvoice);
+
+                                invoiceGrandTotalTextView.setText("$" + String.format("%.2f", currentInvoice.getGrandTotal()));
+
+                                pressedItemButton.getBackground().setAlpha(255);
+                                pressedItemButton = null;
+                                pressedNumberButton.getBackground().setAlpha(255);
+                                otherItemAmount = 0;
+                                pressedNumberButton = null;
+
+                                loadInvoiceItems();
+                            }
+                        }
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .create();
+
+        itemEditDialog.show();
+    }
+
 
 }

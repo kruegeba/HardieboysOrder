@@ -518,8 +518,8 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
 
         //addInvoice(new Invoice(3, "Credit Card", 10.50, new Date()));
 
-        addInvoiceItem(new InvoiceItem(1, 1, 3, 0, 10.50));
-        addInvoiceItem(new InvoiceItem(1, 1, 4, 0, 18.75));
+        //addInvoiceItem(new InvoiceItem(1, 1, 3, 0, 10.50));
+        //addInvoiceItem(new InvoiceItem(1, 1, 4, 0, 18.75));
     }
 
     public boolean isItemUsed(Item item){

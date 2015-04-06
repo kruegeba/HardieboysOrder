@@ -20,22 +20,37 @@ public class InvoiceItem {
         this.total = total;
     }
 
+    public InvoiceItem(int invoiceItemID, int invoiceID, int itemID, int quantity, int discount, double total){
+        this.invoiceItemID = invoiceItemID;
+        this.invoiceID = invoiceID;
+        this.itemID = itemID;
+        this.quantity = quantity;
+        this.discount = discount;
+        this.total = total;
+    }
+
     @Override
     public String toString(){
         String quantityString, descriptionString, totalString;
 
-        quantityString = quantity + "";
-        int padLength = 10 - quantityString.length();
-        while(quantityString.length() < padLength){
-            quantityString += " ";
+        if(getInvoiceItemID() == -22){
+            return discount + "% Discount   -$" + String.format("%.2f", (total * ((double)discount/100)));
+        }else{
+            quantityString = quantity + "";
+            int padLength = 10 - quantityString.length();
+            while(quantityString.length() < padLength){
+                quantityString += " ";
+            }
+
+            descriptionString = item.getDescription();
+            if(descriptionString.length() > 20){
+                descriptionString = descriptionString.substring(0, 20);
+            }
+
+            return quantityString + descriptionString + "   $" + String.format("%.2f", total);
         }
 
-        descriptionString = item.getDescription();
-        if(descriptionString.length() > 20){
-            descriptionString = descriptionString.substring(0, 20);
-        }
 
-        return quantityString + descriptionString + "   $" + String.format("%.2f", total);
     }
 
     public int getInvoiceItemID() {
@@ -89,4 +104,8 @@ public class InvoiceItem {
     public void setItem(Item item){this.item = item;}
 
     public Item getItem(){return this.item;}
+
+    public double getDiscountAmount(){
+        return total * (double)discount / 100;
+    }
 }

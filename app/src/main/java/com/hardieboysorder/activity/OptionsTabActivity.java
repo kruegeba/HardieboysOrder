@@ -1,9 +1,11 @@
 package com.hardieboysorder.activity;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -27,8 +29,10 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 
 public class OptionsTabActivity extends Activity {
 
@@ -45,34 +49,6 @@ public class OptionsTabActivity extends Activity {
         db = new HardieboysOrderDB(this);
         initializeViews();
         checkRadioButtons();
-
-       /* Button button = (Button) findViewById(R.id.button);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                FileOutputStream fos;
-                BufferedReader br;
-                try {
-                    File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+File.separator+"MyFile2.txt");
-                    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(f));
-                    bufferedWriter.write(createHeaderRow());
-                    ArrayList<OutputRow> outputRows = db.getOutputRows();
-
-                    for (int i = 0; i < outputRows.size(); i++) {
-                        outputRows.get(i).setNameCode(getContactNickname(outputRows.get(i).getContactID()));
-                        bufferedWriter.write(outputRows.get(i).toString());
-                        bufferedWriter.write("\n");
-                    }
-                    bufferedWriter.flush();
-                    bufferedWriter.close();
-
-                    sendEmailWithAttachment();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });*/
-
     }
 
     private void initializeViews(){
@@ -105,6 +81,62 @@ public class OptionsTabActivity extends Activity {
             }
         });
         emailButton = (Button)findViewById(R.id.emailButton);
+        emailButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String fileName = "";
+
+                if(todayRadioButton.isChecked()){
+                    fileName = createAccountingFile(new Date());
+
+                    if(fileName.equals("")){
+                        new AlertDialog.Builder(v.getContext())
+                                .setTitle("Nothing Found")
+                                .setMessage("There were no invoices found for this date selection.")
+                                .setNegativeButton("OK", new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        // do nothing
+                                    }
+                                })
+                                .setIcon(android.R.drawable.ic_dialog_alert)
+                                .show();
+                    }else{
+                        sendEmailWithAttachment(fileName);
+                    }
+                }else {
+                    if (startTextView.getText().toString().equals("") || endTextView.getText().toString().equals("")) {
+                        new AlertDialog.Builder(v.getContext())
+                                .setTitle("Invalid Date Range")
+                                .setMessage("Please select valid start and end dates.")
+                                .setNegativeButton("OK", new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        // do nothing
+                                    }
+                                })
+                                .setIcon(android.R.drawable.ic_dialog_alert)
+                                .show();
+                    } else {
+                        fileName = createAccountingFile(startTextView.getText().toString(), endTextView.getText().toString());
+
+                        if(fileName.equals("")){
+                            new AlertDialog.Builder(v.getContext())
+                                    .setTitle("Nothing Found")
+                                    .setMessage("There were no invoices found for this date selection.")
+                                    .setNegativeButton("OK", new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            // do nothing
+                                        }
+                                    })
+                                    .setIcon(android.R.drawable.ic_dialog_alert)
+                                    .show();
+                        }else{
+                            sendEmailWithAttachment(fileName);
+                        }
+                    }
+                }
+            }
+        });
+
         startTextView = (TextView)findViewById(R.id.startTextView);
         endTextView = (TextView)findViewById(R.id.endTextView);
     }
@@ -151,32 +183,15 @@ public class OptionsTabActivity extends Activity {
         return nickname;
     }
 
-    private void sendEmailWithAttachment(){
+    private void sendEmailWithAttachment(String fileName){
         Intent emailIntent = new Intent(Intent.ACTION_SEND);
         emailIntent.setType("text/plain");
         emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {"ben.adams.krueger@gmail.com"});
-        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "subject here");
-        emailIntent.putExtra(Intent.EXTRA_TEXT, "body text");
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, fileName);
 
-        String root = Environment.DIRECTORY_DOCUMENTS;
-        File root2 = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
-        String pathToMyAttachedFile = "MyFile2.txt";
-        File file = new File(root2, pathToMyAttachedFile);
-        try {
-            if (!file.exists() || !file.canRead()) {
-                return;
-            }
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
-            String read;
-            StringBuilder builder = new StringBuilder("");
+        File root = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        File file = new File(root, fileName);
 
-            while ((read = bufferedReader.readLine()) != null) {
-                builder.append(read);
-            }
-            bufferedReader.close();
-        }catch(Exception e){
-            e.printStackTrace();
-        }
         Uri uri = Uri.fromFile(file);
         emailIntent.putExtra(Intent.EXTRA_STREAM, uri);
         startActivity(Intent.createChooser(emailIntent, "Pick an Email provider"));
@@ -220,7 +235,7 @@ public class OptionsTabActivity extends Activity {
         }
 
         public void onDateSet(DatePicker view, int year, int month, int day){
-            startTextView.setText(day + "-" + month + "-" + year);
+            startTextView.setText(day + "-" + (month + 1) + "-" + year);
         }
     }
 
@@ -238,7 +253,67 @@ public class OptionsTabActivity extends Activity {
         }
 
         public void onDateSet(DatePicker view, int year, int month, int day){
-            endTextView.setText(day + "-" + month + "-" + year);
+            endTextView.setText(day + "-" + (month + 1) + "-" + year);
         }
+    }
+
+    private String createAccountingFile(Date date){
+        FileOutputStream fos;
+        File file;
+        String fileName = "Accounting File " + new SimpleDateFormat("d-M-yyyy").format(date) + ".txt";
+        try {
+            file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+File.separator+fileName);
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file));
+            bufferedWriter.write(createHeaderRow());
+            ArrayList<OutputRow> outputRows = db.getOutputRows(date);
+
+            if(outputRows.size() == 0){
+                file.delete();
+                fileName = "";
+            }else{
+                for (int i = 0; i < outputRows.size(); i++) {
+                    outputRows.get(i).setNameCode(getContactNickname(outputRows.get(i).getContactID()));
+                    bufferedWriter.write(outputRows.get(i).toString());
+                    bufferedWriter.write("\n");
+                }
+
+                bufferedWriter.flush();
+                bufferedWriter.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return fileName;
+    }
+
+    private String createAccountingFile(String startDate, String endDate){
+        FileOutputStream fos;
+        File file;
+        String fileName = "Accounting File " + startDate + "to" + endDate + ".txt";
+        try {
+            file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+File.separator+fileName);
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file));
+            bufferedWriter.write(createHeaderRow());
+            ArrayList<OutputRow> outputRows = db.getOutputRows(startDate, endDate);
+
+            if(outputRows.size() == 0){
+                file.delete();
+                fileName = "";
+            }else{
+                for (int i = 0; i < outputRows.size(); i++) {
+                    outputRows.get(i).setNameCode(getContactNickname(outputRows.get(i).getContactID()));
+                    bufferedWriter.write(outputRows.get(i).toString());
+                    bufferedWriter.write("\n");
+                }
+
+                bufferedWriter.flush();
+                bufferedWriter.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return fileName;
     }
 }

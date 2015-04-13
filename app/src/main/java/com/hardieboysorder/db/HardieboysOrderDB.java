@@ -649,7 +649,61 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         return invoiceItems;
     }
 
-    public ArrayList<OutputRow> getOutputRows() {
+    public ArrayList<OutputRow> getOutputRows(Date date) {
+        ArrayList<OutputRow> outputRows = new ArrayList<OutputRow>();
+        String dateString = "";
+        try{
+            dateString = new SimpleDateFormat("dd-MM-yyyy").format(date);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+        // 1. build the query
+        StringBuilder query = new StringBuilder();
+        query.append("SELECT ");
+        query.append("Inv.InvoiceID, ");
+        query.append("Inv.Date, ");
+        query.append("Inv.GrandTotal, ");
+        query.append("Item.Code, ");
+        query.append("InvItem.Quantity, ");
+        query.append("InvItem.Discount, ");
+        query.append("Inv.ContactID ");
+        query.append("FROM ");
+        query.append("Invoice Inv ");
+        query.append("JOIN InvoiceItem InvItem ON Inv.InvoiceID = InvItem.InvoiceID ");
+        query.append("JOIN Item Item ON InvItem.ItemID = Item.ItemID ");
+        query.append("WHERE Inv.Date > '" + dateString + "' ");
+        query.append("ORDER BY Inv.InvoiceID ASC");
+
+        // 2. get reference to writable DB
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(query.toString(), null);
+
+        // 3. go over each row, build book and add it to list
+        OutputRow outputRow = null;
+        if (cursor.moveToFirst()) {
+            do {
+                outputRow = new OutputRow();
+
+                outputRow.setInvoiceID(cursor.getInt(0));
+                outputRow.setDate(cursor.getString(1));
+                outputRow.setType("DI");
+                outputRow.setGross(cursor.getDouble(2));
+                outputRow.setItemCode(cursor.getString(3));
+                outputRow.setQuantity(cursor.getInt(4));
+                outputRow.setDiscount(cursor.getInt(5));
+                outputRow.setContactID(cursor.getInt(6));
+
+                outputRows.add(outputRow);
+            } while (cursor.moveToNext());
+        }
+
+        db.close();
+
+        return outputRows;
+    }
+
+    public ArrayList<OutputRow> getOutputRows(String startDate, String endDate) {
         ArrayList<OutputRow> outputRows = new ArrayList<OutputRow>();
 
         // 1. build the query
@@ -666,6 +720,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         query.append("Invoice Inv ");
         query.append("JOIN InvoiceItem InvItem ON Inv.InvoiceID = InvItem.InvoiceID ");
         query.append("JOIN Item Item ON InvItem.ItemID = Item.ItemID ");
+        query.append("WHERE Inv.Date BETWEEN '" + startDate + "' AND '" + endDate + "' ");
         query.append("ORDER BY Inv.InvoiceID ASC");
 
         // 2. get reference to writable DB

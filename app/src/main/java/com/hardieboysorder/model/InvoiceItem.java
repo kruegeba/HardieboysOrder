@@ -31,26 +31,7 @@ public class InvoiceItem {
 
     @Override
     public String toString(){
-        String quantityString, descriptionString, totalString;
-
-        if(getInvoiceItemID() == -22){
-            return discount + "% Discount   -$" + String.format("%.2f", (total * ((double)discount/100)));
-        }else{
-            quantityString = quantity + "";
-            int padLength = 10 - quantityString.length();
-            while(quantityString.length() < padLength){
-                quantityString += " ";
-            }
-
-            descriptionString = item.getDescription();
-            if(descriptionString.length() > 20){
-                descriptionString = descriptionString.substring(0, 20);
-            }
-
-            return quantityString + descriptionString + "   $" + String.format("%.2f", total);
-        }
-
-
+        return quantity + item.getDescription() + "$" + String.format("%.2f", total);
     }
 
     public int getInvoiceItemID() {

@@ -5,6 +5,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.content.ContentValues;
+import android.provider.ContactsContract;
+
 import com.hardieboysorder.model.*;
 
 import java.text.SimpleDateFormat;
@@ -252,7 +254,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         ContentValues values = new ContentValues();
         values.put("ContactID", invoice.getContactID());
         values.put("GrandTotal", invoice.getGrandTotal());
-        values.put("Date", new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(invoice.getDate()));
+        values.put("Date", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(invoice.getDate()));
 
         // 3. insert
         db.insert("Invoice", // table
@@ -291,7 +293,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         invoice.setContactID(cursor.getInt(1));
         invoice.setGrandTotal(cursor.getDouble(2));
         try{
-            invoice.setDate(new SimpleDateFormat("MM/dd/yyyy HH:mm:ss", Locale.ENGLISH).parse(cursor.getString(3)));
+            invoice.setDate(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.ENGLISH).parse(cursor.getString(3)));
         }catch(Exception e){
             //Ignore for now
         }
@@ -321,7 +323,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
                 invoice.setContactID(cursor.getInt(1));
                 invoice.setGrandTotal(cursor.getDouble(2));
                 try{
-                    invoice.setDate(new SimpleDateFormat("MM/dd/yyyy HH:mm:ss", Locale.ENGLISH).parse(cursor.getString(3)));
+                    invoice.setDate(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.ENGLISH).parse(cursor.getString(3)));
                 }catch(Exception e){
                     //Ignore for now
                 }
@@ -346,7 +348,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         ContentValues values = new ContentValues();
         values.put("ContactID", invoice.getContactID());
         values.put("GrandTotal", invoice.getGrandTotal());
-        values.put("Date", new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(invoice.getDate()));
+        values.put("Date", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(invoice.getDate()));
 
         // 3. updating row
         int i = db.update("Invoice", //table
@@ -600,7 +602,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
             invoice.setContactID(cursor.getInt(1));
             invoice.setGrandTotal(cursor.getDouble(2));
             try {
-                invoice.setDate(new SimpleDateFormat("MM/dd/yyyy HH:mm:ss", Locale.ENGLISH).parse(cursor.getString(3)));
+                invoice.setDate(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.ENGLISH).parse(cursor.getString(3)));
             } catch (Exception e) {
                 //Ignore for now
             }
@@ -647,5 +649,50 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         return invoiceItems;
     }
 
+    public ArrayList<OutputRow> getOutputRows() {
+        ArrayList<OutputRow> outputRows = new ArrayList<OutputRow>();
 
+        // 1. build the query
+        StringBuilder query = new StringBuilder();
+        query.append("SELECT ");
+        query.append("Inv.InvoiceID, ");
+        query.append("Inv.Date, ");
+        query.append("Inv.GrandTotal, ");
+        query.append("Item.Code, ");
+        query.append("InvItem.Quantity, ");
+        query.append("InvItem.Discount, ");
+        query.append("Inv.ContactID ");
+        query.append("FROM ");
+        query.append("Invoice Inv ");
+        query.append("JOIN InvoiceItem InvItem ON Inv.InvoiceID = InvItem.InvoiceID ");
+        query.append("JOIN Item Item ON InvItem.ItemID = Item.ItemID ");
+        query.append("ORDER BY Inv.InvoiceID ASC");
+
+        // 2. get reference to writable DB
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(query.toString(), null);
+
+        // 3. go over each row, build book and add it to list
+        OutputRow outputRow = null;
+        if (cursor.moveToFirst()) {
+            do {
+                outputRow = new OutputRow();
+
+                outputRow.setInvoiceID(cursor.getInt(0));
+                outputRow.setDate(cursor.getString(1));
+                outputRow.setType("DI");
+                outputRow.setGross(cursor.getDouble(2));
+                outputRow.setItemCode(cursor.getString(3));
+                outputRow.setQuantity(cursor.getInt(4));
+                outputRow.setDiscount(cursor.getInt(5));
+                outputRow.setContactID(cursor.getInt(6));
+
+                outputRows.add(outputRow);
+            } while (cursor.moveToNext());
+        }
+
+        db.close();
+
+        return outputRows;
+    }
 }

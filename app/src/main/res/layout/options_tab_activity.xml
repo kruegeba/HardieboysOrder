@@ -77,7 +77,7 @@
         android:layout_alignTop="@+id/endButton" />
 
     <Button
-        android:layout_width="400px"
+        android:layout_width="450px"
         android:layout_height="200px"
         android:text="Send Email"
         android:id="@+id/emailButton"

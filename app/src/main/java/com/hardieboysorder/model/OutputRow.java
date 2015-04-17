@@ -1,5 +1,7 @@
 package com.hardieboysorder.model;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -18,6 +20,7 @@ public class OutputRow {
     private int quantity;
     private int discount;
     private int contactID;
+    private double itemPrice;
 
     public OutputRow(){
 
@@ -90,7 +93,9 @@ public class OutputRow {
     }
 
     public void setGross(double gross) {
-        this.gross = gross;
+        double gstAmount = (gross * 3)/23;
+        double amount = gross - gstAmount;
+        this.gross = round(amount, 2);
     }
 
     public double getNet() {
@@ -98,19 +103,11 @@ public class OutputRow {
     }
 
     public void setNet(double net) {
-        this.net = net;
-    }
-
-    public String getItemCode() {
-        return itemCode;
+        this.net = calculateWithoutGST();
     }
 
     public void setItemCode(String itemCode) {
         this.itemCode = itemCode;
-    }
-
-    public int getQuantity() {
-        return quantity;
     }
 
     public void setQuantity(int quantity) {
@@ -131,5 +128,25 @@ public class OutputRow {
 
     public void setContactID(int contactID) {
         this.contactID = contactID;
+    }
+
+    public void setItemPrice(double itemPrice) {
+        this.itemPrice = itemPrice;
+    }
+
+    private double calculateWithoutGST(){
+        double gstAmount = (itemPrice * 3)/23;
+        double amount = itemPrice - gstAmount;
+        amount *= quantity;
+
+        return round(amount, 2);
+    }
+
+    public static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        BigDecimal bd = new BigDecimal(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
     }
 }

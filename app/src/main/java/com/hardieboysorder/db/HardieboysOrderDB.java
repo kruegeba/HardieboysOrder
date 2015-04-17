@@ -667,7 +667,9 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         query.append("Item.Code, ");
         query.append("InvItem.Quantity, ");
         query.append("InvItem.Discount, ");
-        query.append("Inv.ContactID ");
+        query.append("Inv.ContactID, ");
+        query.append("Item.Price, ");
+        query.append("InvItem.Total ");
         query.append("FROM ");
         query.append("Invoice Inv ");
         query.append("JOIN InvoiceItem InvItem ON Inv.InvoiceID = InvItem.InvoiceID ");
@@ -693,6 +695,8 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
                 outputRow.setQuantity(cursor.getInt(4));
                 outputRow.setDiscount(cursor.getInt(5));
                 outputRow.setContactID(cursor.getInt(6));
+                outputRow.setItemPrice(cursor.getDouble(7));
+                outputRow.setNet(cursor.getDouble(8));
 
                 outputRows.add(outputRow);
             } while (cursor.moveToNext());
@@ -715,7 +719,9 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         query.append("Item.Code, ");
         query.append("InvItem.Quantity, ");
         query.append("InvItem.Discount, ");
-        query.append("Inv.ContactID ");
+        query.append("Inv.ContactID, ");
+        query.append("Item.Price, ");
+        query.append("InvItem.Total ");
         query.append("FROM ");
         query.append("Invoice Inv ");
         query.append("JOIN InvoiceItem InvItem ON Inv.InvoiceID = InvItem.InvoiceID ");
@@ -741,6 +747,8 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
                 outputRow.setQuantity(cursor.getInt(4));
                 outputRow.setDiscount(cursor.getInt(5));
                 outputRow.setContactID(cursor.getInt(6));
+                outputRow.setItemPrice(cursor.getInt(7));
+                outputRow.setNet(cursor.getDouble(8));
 
                 outputRows.add(outputRow);
             } while (cursor.moveToNext());

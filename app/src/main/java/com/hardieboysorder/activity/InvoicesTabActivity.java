@@ -2,12 +2,19 @@ package com.hardieboysorder.activity;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.graphics.BitmapFactory;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.ContactsContract;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,7 +27,9 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.bixolon.printer.BixolonPrinter;
 import com.hardieboysorder.R;
 import com.hardieboysorder.adapter.InvoiceItemAdapter;
 import com.hardieboysorder.db.HardieboysOrderDB;
@@ -33,6 +42,7 @@ import com.hardieboysorder.widget.NumberButton;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Set;
 
 public class InvoicesTabActivity extends Activity {
 
@@ -48,7 +58,8 @@ public class InvoicesTabActivity extends Activity {
     Invoice currentInvoice;
     int mostRecentInvoiceID, otherItemAmount;
     boolean comingFromContactSelect = false;
-
+    boolean mConnected = false;
+    static BixolonPrinter mBixolonPrinter;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,6 +71,8 @@ public class InvoicesTabActivity extends Activity {
         initializeViews();
         initializeClickEvents();
         loadNumberButtons();
+
+        mBixolonPrinter = new BixolonPrinter(this, mHandler, null);
     }
 
     @Override
@@ -133,6 +146,20 @@ public class InvoicesTabActivity extends Activity {
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
                 startActivityForResult(intent, 3);
+            }
+        });
+
+        printImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!mConnected){
+                    mBixolonPrinter.findUsbPrinters();
+                    mConnected = true;
+                }
+
+                if(mConnected){
+                    printCurrentInvoice();
+                }
             }
         });
     }
@@ -598,5 +625,126 @@ public class InvoicesTabActivity extends Activity {
         itemEditDialog.show();
     }
 
+    private void printCurrentInvoice(){
 
+        int left = BixolonPrinter.ALIGNMENT_LEFT;
+        int center = BixolonPrinter.ALIGNMENT_CENTER;
+        int right = BixolonPrinter.ALIGNMENT_RIGHT;
+
+        int attribute = BixolonPrinter.TEXT_ATTRIBUTE_FONT_A;
+        int underline = BixolonPrinter.TEXT_ATTRIBUTE_FONT_A;
+        underline |= BixolonPrinter.TEXT_ATTRIBUTE_UNDERLINE2;
+
+        int size = BixolonPrinter.TEXT_SIZE_HORIZONTAL1;
+        size |= BixolonPrinter.TEXT_SIZE_VERTICAL1;
+
+        mBixolonPrinter.printText("HARDIEBOYS BEVERAGES", center, attribute, size, false);
+        mBixolonPrinter.lineFeed(1, false);
+        mBixolonPrinter.printText("PO BOX 27413", center, attribute, size, false);
+        mBixolonPrinter.lineFeed(1, false);
+        mBixolonPrinter.printText("WELLINGTON", center, attribute, size, false);
+        mBixolonPrinter.lineFeed(1, false);
+        mBixolonPrinter.printText("TEL 021647528", center, attribute, size, false);
+        mBixolonPrinter.lineFeed(1, false);
+        mBixolonPrinter.printText("TAX INVOICE GST NO.18475243", center, attribute, size, false);
+        mBixolonPrinter.lineFeed(1, false);
+        mBixolonPrinter.printText("GST INCL", center, attribute, size, false);
+        mBixolonPrinter.lineFeed(2, false);
+        mBixolonPrinter.printText("ORDER #:   1753", left, attribute, size, false);
+        mBixolonPrinter.lineFeed(1, false);
+        mBixolonPrinter.printText("DATE:      13/4/15 9:48 AM", left, attribute, size, false);
+        mBixolonPrinter.lineFeed(1, false);
+        mBixolonPrinter.printText("SOLD TO:   WELLY CAFE INC", left, attribute, size, false);
+        mBixolonPrinter.lineFeed(1, false);
+        mBixolonPrinter.printText("           27 N ARO ST", left, attribute, size, false);
+        mBixolonPrinter.lineFeed(1, false);
+        mBixolonPrinter.printText("           WELLINGTON", left, attribute, size, false);
+        mBixolonPrinter.lineFeed(1, false);
+        mBixolonPrinter.printText("ACCOUNT:   WCI", left, attribute, size, false);
+        mBixolonPrinter.lineFeed(1, false);
+        mBixolonPrinter.printText("PAYMENT:   INVOICE", left, attribute, size, false);
+        mBixolonPrinter.lineFeed(2, false);
+        mBixolonPrinter.printText("QTY", left, underline, size, false);//3
+        mBixolonPrinter.printText("    ", left, attribute, size, false);//4 = 7
+        mBixolonPrinter.printText("DESC", left, underline, size, false);//4
+        mBixolonPrinter.printText("              ", left, attribute, size, false);//11 = 14
+        mBixolonPrinter.printText("PRICE@", left, underline, size, false);//6
+        mBixolonPrinter.printText("      ", left, attribute, size, false);//4 = 10
+        mBixolonPrinter.printText("PRICE", right, underline, size, false);
+        mBixolonPrinter.lineFeed(1, false);
+        mBixolonPrinter.printText("2      LEMONADE       $3.50       $7.00", left, attribute, size, false);
+        mBixolonPrinter.lineFeed(1, false);
+        mBixolonPrinter.printText("10     LIME           $3.50       $35.00", left, attribute, size, false);
+        mBixolonPrinter.lineFeed(1, false);
+        mBixolonPrinter.printText("123    REGULAR GINGER $3.50       $430.50", left, attribute, size, false);
+        mBixolonPrinter.lineFeed(1, false);
+        mBixolonPrinter.printText("SUBTOTAL: $7.00", right, attribute, size, false);
+        mBixolonPrinter.lineFeed(1, false);
+        mBixolonPrinter.printText("TOTAL:    $7.00", right, attribute, size, false);
+        mBixolonPrinter.lineFeed(2, false);
+        mBixolonPrinter.printText("THANK YOU FOR YOUR ORDER!", center, attribute, size, false);
+        mBixolonPrinter.lineFeed(7, false);
+
+        mBixolonPrinter.cutPaper(false);
+    }
+
+    private final Handler mHandler = new Handler(new Handler.Callback() {
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public boolean handleMessage(Message msg) {
+            //Log.d(TAG, "mHandler.handleMessage(" + msg + ")");
+
+            switch (msg.what) {
+                case BixolonPrinter.MESSAGE_USB_DEVICE_SET:
+                    if (msg.obj == null) {
+                        Toast.makeText(getApplicationContext(), "No connected device", Toast.LENGTH_SHORT).show();
+                    } else {
+                        showUsbDialog(InvoicesTabActivity.this, (Set<UsbDevice>) msg.obj, mUsbReceiver);
+                    }
+                    return true;
+            }
+            return false;
+        }
+    });
+
+    private BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+
+            if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action)) {
+                mBixolonPrinter.connect();
+                Toast.makeText(getApplicationContext(), "Found USB device", Toast.LENGTH_SHORT).show();
+            } else if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
+                mBixolonPrinter.disconnect();
+                Toast.makeText(getApplicationContext(), "USB device removed", Toast.LENGTH_SHORT).show();
+                mConnected = false;
+            }
+
+        }
+    };
+
+    static void showUsbDialog(final Context context, final Set<UsbDevice> usbDevices, final BroadcastReceiver usbReceiver) {
+        final String[] items = new String[usbDevices.size()];
+        int index = 0;
+        for (UsbDevice device : usbDevices) {
+            items[index++] = "Device name: " + device.getDeviceName() + ", Product ID: " + device.getProductId() + ", Device ID: " + device.getDeviceId();
+        }
+
+        new AlertDialog.Builder(context).setTitle("Connected USB printers")
+                .setItems(items, new DialogInterface.OnClickListener() {
+
+                    public void onClick(DialogInterface dialog, int which) {
+                        mBixolonPrinter.connect((UsbDevice) usbDevices.toArray()[which]);
+
+                        // listen for new devices
+                        IntentFilter filter = new IntentFilter();
+                        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+                        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+                        context.registerReceiver(usbReceiver, filter);
+                    }
+                }).show();
+    }
 }

@@ -79,7 +79,7 @@ public class InvoicesTabActivity extends Activity {
     public void onResume() {
         super.onResume();
 
-        if(!comingFromContactSelect) {
+        if (!comingFromContactSelect) {
             loadItemButtons();
             loadMostRecentInvoice();
             loadInvoiceItems();
@@ -88,19 +88,19 @@ public class InvoicesTabActivity extends Activity {
         }
     }
 
-    private void initializeViews(){
-        invoiceTextView = (TextView)findViewById(R.id.invoiceTextView);
-        contactTextView = (TextView)findViewById(R.id.contactTextView);
-        dateTextView = (TextView)findViewById(R.id.dateTextView);
-        invoiceGrandTotalTextView = (TextView)findViewById(R.id.invoiceGrandTotalTextView);
-        invoiceItemListView = (ListView)findViewById(R.id.invoiceItemListView);
-        backImageButton = (ImageButton)findViewById(R.id.backImageButton);
-        forwardImageButton = (ImageButton)findViewById(R.id.forwardImageButton);
-        contactImageButton = (ImageButton)findViewById(R.id.contactImageButton);
-        printImageButton = (ImageButton)findViewById(R.id.printImageButton);
+    private void initializeViews() {
+        invoiceTextView = (TextView) findViewById(R.id.invoiceTextView);
+        contactTextView = (TextView) findViewById(R.id.contactTextView);
+        dateTextView = (TextView) findViewById(R.id.dateTextView);
+        invoiceGrandTotalTextView = (TextView) findViewById(R.id.invoiceGrandTotalTextView);
+        invoiceItemListView = (ListView) findViewById(R.id.invoiceItemListView);
+        backImageButton = (ImageButton) findViewById(R.id.backImageButton);
+        forwardImageButton = (ImageButton) findViewById(R.id.forwardImageButton);
+        contactImageButton = (ImageButton) findViewById(R.id.contactImageButton);
+        printImageButton = (ImageButton) findViewById(R.id.printImageButton);
     }
 
-    private void initializeClickEvents(){
+    private void initializeClickEvents() {
         invoiceItemListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
@@ -112,7 +112,7 @@ public class InvoicesTabActivity extends Activity {
         backImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(currentInvoice.getInvoiceID() != 1){
+                if (currentInvoice.getInvoiceID() != 1) {
                     loadInvoice(db.getInvoice(currentInvoice.getInvoiceID() - 1));
                     loadInvoiceItems();
                 }
@@ -124,8 +124,8 @@ public class InvoicesTabActivity extends Activity {
         forwardImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(currentInvoice.getInvoiceID() == mostRecentInvoiceID){
-                    if(currentInvoice.getContactID() != -1 || invoiceItemAdapter.getCount() > 0){
+                if (currentInvoice.getInvoiceID() == mostRecentInvoiceID) {
+                    if (currentInvoice.getContactID() != -1 || invoiceItemAdapter.getCount() > 0) {
                         Invoice newInvoice = new Invoice(-1, 0, new Date());
 
                         db.addInvoice(newInvoice);
@@ -133,7 +133,7 @@ public class InvoicesTabActivity extends Activity {
                         loadInvoiceItems();
                         handleNavButtons();
                     }
-                }else{
+                } else {
                     loadInvoice(db.getInvoice(currentInvoice.getInvoiceID() + 1));
                     loadInvoiceItems();
                     handleNavButtons();
@@ -152,12 +152,13 @@ public class InvoicesTabActivity extends Activity {
         printImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!mConnected){
+                getContactAddress(currentInvoice.getContactID());
+                if (!mConnected) {
                     mBixolonPrinter.findUsbPrinters();
                     mConnected = true;
                 }
 
-                if(mConnected){
+                if (mConnected) {
                     printCurrentInvoice();
                 }
             }
@@ -181,10 +182,10 @@ public class InvoicesTabActivity extends Activity {
             ItemButton newItemButton = null;
             boolean hasIconOrder = false;
 
-            for(int y = 0; y < items.size(); y++){
+            for (int y = 0; y < items.size(); y++) {
                 Item currentItem = items.get(y);
 
-                if(items.get(y).getIconOrder() == i + 1){
+                if (items.get(y).getIconOrder() == i + 1) {
                     newItemButton = new ItemButton(this, currentItem, id);
                     items.remove(currentItem);
                     hasIconOrder = true;
@@ -193,7 +194,7 @@ public class InvoicesTabActivity extends Activity {
             }
 
             //Need to create a blank button for this space
-            if(!hasIconOrder){
+            if (!hasIconOrder) {
                 newItemButton = new ItemButton(this, id);
             }
 
@@ -207,9 +208,9 @@ public class InvoicesTabActivity extends Activity {
             newItemButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    ItemButton selectedItemButton = (ItemButton)v;
+                    ItemButton selectedItemButton = (ItemButton) v;
 
-                    if(selectedItemButton.getItem() != null) {
+                    if (selectedItemButton.getItem() != null) {
                         if (pressedItemButton != null) {
                             //An item button has already been selected so switch to new item if
                             //it is different, or un-select if it is the same button.
@@ -231,9 +232,9 @@ public class InvoicesTabActivity extends Activity {
                                 InvoiceItem newInvoiceItem = new InvoiceItem();
                                 newInvoiceItem.setInvoiceID(currentInvoice.getInvoiceID());
                                 newInvoiceItem.setItemID(pressedItemButton.getItem().getItemID());
-                                if(otherItemAmount > 0){
+                                if (otherItemAmount > 0) {
                                     newInvoiceItem.setQuantity(otherItemAmount);
-                                }else{
+                                } else {
                                     newInvoiceItem.setQuantity(pressedNumberButton.getNumber());
                                 }
                                 newInvoiceItem.setTotal(pressedItemButton.getItem().getPrice() * newInvoiceItem.getQuantity());
@@ -262,15 +263,14 @@ public class InvoicesTabActivity extends Activity {
             RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             layoutParams.setMargins(20, 20, 0, 0);
 
-            if (colCount == 0){
+            if (colCount == 0) {
                 layoutParams.addRule(RelativeLayout.ALIGN_PARENT_START);
-            }
-            else{
+            } else {
                 layoutParams.addRule(RelativeLayout.RIGHT_OF, id - 1);
             }
 
             //If we are in any row except the top row, place in reference to the button above it
-            if (rowCount != 0){
+            if (rowCount != 0) {
                 layoutParams.addRule(RelativeLayout.BELOW, id - colSpan);
             }
 
@@ -285,10 +285,10 @@ public class InvoicesTabActivity extends Activity {
         }
     }
 
-    private void loadNumberButtons(){
-        numberButtonLayout = (LinearLayout)findViewById(R.id.numberButtonLayout);
+    private void loadNumberButtons() {
+        numberButtonLayout = (LinearLayout) findViewById(R.id.numberButtonLayout);
 
-        for(int i = 1; i < 21; i++){
+        for (int i = 1; i < 21; i++) {
             NumberButton newNumberButton = new NumberButton(this, i);
             newNumberButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -352,10 +352,10 @@ public class InvoicesTabActivity extends Activity {
 
     }
 
-    private void loadMostRecentInvoice(){
+    private void loadMostRecentInvoice() {
         currentInvoice = db.getMostRecentInvoice();
 
-        if(currentInvoice == null){
+        if (currentInvoice == null) {
             currentInvoice = new Invoice(1, -1, 0, new Date());
             db.addInvoice(currentInvoice);
         }
@@ -367,7 +367,7 @@ public class InvoicesTabActivity extends Activity {
         mostRecentInvoiceID = currentInvoice.getInvoiceID();
     }
 
-    private void loadInvoice(Invoice invoice){
+    private void loadInvoice(Invoice invoice) {
         currentInvoice = invoice;
         invoiceTextView.setText("#" + currentInvoice.getInvoiceID());
         contactTextView.setText(getContactName(currentInvoice.getContactID()));
@@ -375,13 +375,13 @@ public class InvoicesTabActivity extends Activity {
         invoiceGrandTotalTextView.setText("$" + String.format("%.2f", currentInvoice.getGrandTotal()));
     }
 
-    private void loadInvoiceItems(){
+    private void loadInvoiceItems() {
         ArrayList<InvoiceItem> invoiceItems = db.getInvoiceItemsForInvoice(currentInvoice.getInvoiceID());
         invoiceItemAdapter = new InvoiceItemAdapter(this);
 
-        for(InvoiceItem invoiceItem : invoiceItems){
+        for (InvoiceItem invoiceItem : invoiceItems) {
             invoiceItemAdapter.add(invoiceItem);
-            if(invoiceItem.getDiscount() > 0){
+            if (invoiceItem.getDiscount() > 0) {
                 invoiceItemAdapter.add(new InvoiceItem(-22, invoiceItem.getInvoiceItemID(), -1, 0, invoiceItem.getDiscount(), invoiceItem.getTotal()));
             }
         }
@@ -389,16 +389,16 @@ public class InvoicesTabActivity extends Activity {
         invoiceItemListView.setAdapter(invoiceItemAdapter);
     }
 
-    private void handleNavButtons(){
-        if(currentInvoice.getInvoiceID() == mostRecentInvoiceID){
+    private void handleNavButtons() {
+        if (currentInvoice.getInvoiceID() == mostRecentInvoiceID) {
             forwardImageButton.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_action_new));
-        }else{
+        } else {
             forwardImageButton.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_action_forward));
         }
     }
 
-    private void showItemAssignDialog(View v){
-        final ItemButton selectedItemButton = (ItemButton)v;
+    private void showItemAssignDialog(View v) {
+        final ItemButton selectedItemButton = (ItemButton) v;
 
         LayoutInflater layoutInflater = LayoutInflater.from(this);
         View itemAssignDialogView = layoutInflater.inflate(R.layout.item_assign_dialog, null);
@@ -412,21 +412,21 @@ public class InvoicesTabActivity extends Activity {
                 .create();
 
         final ArrayAdapter<Item> itemDesignAdapter = new ArrayAdapter<Item>(this, R.layout.listview_row, db.getItemsWithNoIconOrder());
-        if(selectedItemButton.getItem() != null){
+        if (selectedItemButton.getItem() != null) {
             itemDesignAdapter.add(new Item(null, "(Clear)", 0, null, 0, 0));
         }
 
-        ListView itemAssignListView = (ListView)itemAssignDialogView.findViewById(R.id.itemAssignListView);
+        ListView itemAssignListView = (ListView) itemAssignDialogView.findViewById(R.id.itemAssignListView);
         itemAssignListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Item item = null;
 
-                if(itemDesignAdapter.getItem(position).getDescription().equals("(Clear)")){
+                if (itemDesignAdapter.getItem(position).getDescription().equals("(Clear)")) {
                     item = selectedItemButton.getItem();
                     item.setIconOrder(0);
-                }else{
-                    if(selectedItemButton.getItem() != null){
+                } else {
+                    if (selectedItemButton.getItem() != null) {
                         Item currentItemButtonItem = selectedItemButton.getItem();
                         currentItemButtonItem.setIconOrder(0);
 
@@ -448,18 +448,17 @@ public class InvoicesTabActivity extends Activity {
         itemAssignDialog.show();
     }
 
-    @Override public void onActivityResult(int reqCode, int resultCode, Intent data){ super.onActivityResult(reqCode, resultCode, data);
+    @Override
+    public void onActivityResult(int reqCode, int resultCode, Intent data) {
+        super.onActivityResult(reqCode, resultCode, data);
 
-        switch(reqCode)
-        {
+        switch (reqCode) {
             case (3):
-                if (resultCode == Activity.RESULT_OK)
-                {
+                if (resultCode == Activity.RESULT_OK) {
                     Uri contactData = data.getData();
                     Cursor c = managedQuery(contactData, null, null, null, null);
                     //Cursor c = getContentResolver().query(ContactsContract.Data.CONTENT_URI, new String[] {ContactsContract.Data.DATA1}, ContactsContract.Data.CONTACT_ID + " = " + 1, null, null);
-                    if (c.moveToFirst())
-                    {
+                    if (c.moveToFirst()) {
                         String id = c.getString(c.getColumnIndexOrThrow(ContactsContract.Contacts._ID));
                         currentInvoice.setContactID(Integer.parseInt(id));
                         db.updateInvoice(currentInvoice);
@@ -471,10 +470,10 @@ public class InvoicesTabActivity extends Activity {
         }
     }
 
-    private String getContactName(int contactID){
+    private String getContactName(int contactID) {
         String name = "";
 
-        if(contactID > 0){
+        if (contactID > 0) {
             // Build the Uri to query to table
             Uri myPhoneUri = Uri.withAppendedPath(
                     ContactsContract.Contacts.CONTENT_URI, contactID + "");
@@ -495,7 +494,7 @@ public class InvoicesTabActivity extends Activity {
         return name;
     }
 
-    private void showDiscountDeleteDialog(View view, final InvoiceItem invoiceItem){
+    private void showDiscountDeleteDialog(View view, final InvoiceItem invoiceItem) {
         final AlertDialog invoiceItemDiscountDeleteDialog = new AlertDialog.Builder(this)
                 .setCancelable(true)
                 .setTitle("Invoice Item")
@@ -508,17 +507,17 @@ public class InvoicesTabActivity extends Activity {
                 })
                 .setNeutralButton("Delete", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        if(invoiceItem.getInvoiceItemID() == -22){
+                        if (invoiceItem.getInvoiceItemID() == -22) {
                             InvoiceItem invoiceItemWithDiscount = db.getInvoiceItem(invoiceItem.getInvoiceID());
 
                             currentInvoice.setGrandTotal(currentInvoice.getGrandTotal() + invoiceItem.getDiscountAmount());
 
                             invoiceItemWithDiscount.setDiscount(0);
                             db.updateInvoiceItem(invoiceItemWithDiscount);
-                        }else{
-                            if(invoiceItem.getDiscount() > 0){
+                        } else {
+                            if (invoiceItem.getDiscount() > 0) {
                                 currentInvoice.setGrandTotal(currentInvoice.getGrandTotal() - (invoiceItem.getTotal() - invoiceItem.getDiscountAmount()));
-                            }else{
+                            } else {
                                 currentInvoice.setGrandTotal(currentInvoice.getGrandTotal() - invoiceItem.getTotal());
                             }
 
@@ -537,7 +536,7 @@ public class InvoicesTabActivity extends Activity {
         invoiceItemDiscountDeleteDialog.show();
     }
 
-    private void showInvoiceItemDiscountDialog(final InvoiceItem invoiceItem){
+    private void showInvoiceItemDiscountDialog(final InvoiceItem invoiceItem) {
         LayoutInflater layoutInflater = LayoutInflater.from(this);
         View invoiceItemDiscountView = layoutInflater.inflate(R.layout.invoiceitem_discount_dialog, null);
 
@@ -550,7 +549,7 @@ public class InvoicesTabActivity extends Activity {
                 .setPositiveButton("Save", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         invoiceItem.setDiscount(Integer.parseInt(discountEditText.getText().toString()));
-                        double discountAmount = (invoiceItem.getTotal() * ((double)invoiceItem.getDiscount()/100));
+                        double discountAmount = (invoiceItem.getTotal() * ((double) invoiceItem.getDiscount() / 100));
 
                         currentInvoice.setGrandTotal(currentInvoice.getGrandTotal() - discountAmount);
                         invoiceGrandTotalTextView.setText("$" + String.format("%.2f", currentInvoice.getGrandTotal()));
@@ -567,7 +566,7 @@ public class InvoicesTabActivity extends Activity {
         itemEditDialog.show();
     }
 
-    private void showOtherAmountDialog(final View v){
+    private void showOtherAmountDialog(final View v) {
         LayoutInflater layoutInflater = LayoutInflater.from(this);
         View otherAmountView = layoutInflater.inflate(R.layout.other_amount_dialog, null);
 
@@ -625,7 +624,7 @@ public class InvoicesTabActivity extends Activity {
         itemEditDialog.show();
     }
 
-    private void printCurrentInvoice(){
+    private void printCurrentInvoice() {
 
         int left = BixolonPrinter.ALIGNMENT_LEFT;
         int center = BixolonPrinter.ALIGNMENT_CENTER;
@@ -637,6 +636,8 @@ public class InvoicesTabActivity extends Activity {
 
         int size = BixolonPrinter.TEXT_SIZE_HORIZONTAL1;
         size |= BixolonPrinter.TEXT_SIZE_VERTICAL1;
+
+        ArrayList<InvoiceItem> currentInvoiceItems = db.getInvoiceItemsForInvoice(currentInvoice.getInvoiceID());
 
         mBixolonPrinter.printText("HARDIEBOYS BEVERAGES", center, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
@@ -650,37 +651,50 @@ public class InvoicesTabActivity extends Activity {
         mBixolonPrinter.lineFeed(1, false);
         mBixolonPrinter.printText("GST INCL", center, attribute, size, false);
         mBixolonPrinter.lineFeed(2, false);
-        mBixolonPrinter.printText("ORDER #:   1753", left, attribute, size, false);
+        mBixolonPrinter.printText("ORDER #:   " + currentInvoice.getInvoiceID(), left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("DATE:      13/4/15 9:48 AM", left, attribute, size, false);
+        mBixolonPrinter.printText("DATE:      " + dateTextView.getText().toString(), left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("SOLD TO:   WELLY CAFE INC", left, attribute, size, false);
+        mBixolonPrinter.printText("SOLD TO:   " + getContactName(currentInvoice.getContactID()).toUpperCase(), left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("           27 N ARO ST", left, attribute, size, false);
+
+        String[] cityStateArray = getContactAddress(currentInvoice.getContactID());
+
+        mBixolonPrinter.printText("           " + cityStateArray[0].toUpperCase(), left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("           WELLINGTON", left, attribute, size, false);
+        mBixolonPrinter.printText("           " + cityStateArray[1].toUpperCase(), left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("ACCOUNT:   WCI", left, attribute, size, false);
+        mBixolonPrinter.printText("ACCOUNT:   " + getContactNickname(currentInvoice.getContactID()), left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
         mBixolonPrinter.printText("PAYMENT:   INVOICE", left, attribute, size, false);
         mBixolonPrinter.lineFeed(2, false);
-        mBixolonPrinter.printText("QTY", left, underline, size, false);//3
-        mBixolonPrinter.printText("    ", left, attribute, size, false);//4 = 7
-        mBixolonPrinter.printText("DESC", left, underline, size, false);//4
-        mBixolonPrinter.printText("              ", left, attribute, size, false);//11 = 14
-        mBixolonPrinter.printText("PRICE@", left, underline, size, false);//6
-        mBixolonPrinter.printText("      ", left, attribute, size, false);//4 = 10
-        mBixolonPrinter.printText("PRICE", right, underline, size, false);
+        mBixolonPrinter.printText("QTY", left, underline, size, false);
+        mBixolonPrinter.printText("   ", left, attribute, size, false);
+        mBixolonPrinter.printText("DESC", left, underline, size, false);
+        mBixolonPrinter.printText("                ", right, attribute, size, false);
+        mBixolonPrinter.printText("PRICE@", left, underline, size, false);
+        mBixolonPrinter.printText("     ", left, attribute, size, false);
+        mBixolonPrinter.printText("PRICE", left, underline, size, false);
         mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("2      LEMONADE       $3.50       $7.00", left, attribute, size, false);
+
+        for (InvoiceItem invoiceItem : currentInvoiceItems) {
+            mBixolonPrinter.printText(invoiceItem.getPrintOutLine(), left, attribute, size, false);
+            mBixolonPrinter.lineFeed(1, false);
+        }
+
+        String subtotalString = "SUBTOTAL: $" + String.format("%.2f", currentInvoice.getGrandTotal());
+        while (subtotalString.length() < 42) {
+            subtotalString = " " + subtotalString;
+        }
+
+        String totalString = "TOTAL: $" + String.format("%.2f", currentInvoice.getGrandTotal());
+        while (totalString.length() < 42) {
+            totalString = " " + totalString;
+        }
+
+        mBixolonPrinter.printText(subtotalString, left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("10     LIME           $3.50       $35.00", left, attribute, size, false);
-        mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("123    REGULAR GINGER $3.50       $430.50", left, attribute, size, false);
-        mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("SUBTOTAL: $7.00", right, attribute, size, false);
-        mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("TOTAL:    $7.00", right, attribute, size, false);
+        mBixolonPrinter.printText(totalString, left, attribute, size, false);
         mBixolonPrinter.lineFeed(2, false);
         mBixolonPrinter.printText("THANK YOU FOR YOUR ORDER!", center, attribute, size, false);
         mBixolonPrinter.lineFeed(7, false);
@@ -746,5 +760,49 @@ public class InvoicesTabActivity extends Activity {
                         context.registerReceiver(usbReceiver, filter);
                     }
                 }).show();
+    }
+
+    private String getContactNickname(int contactId) {
+        String nickname;
+
+        if (contactId <= 0) {
+            return "";
+        }
+
+        try {
+            Cursor cur = getContentResolver().query(ContactsContract.Data.CONTENT_URI, new String[]{ContactsContract.Data.DATA1}, ContactsContract.Data.CONTACT_ID + " = " + contactId, null, null);
+
+            int nicknameIndex = cur.getColumnIndex(ContactsContract.Data.DATA1);
+
+            if (cur.moveToFirst()) {
+                nickname = cur.getString(nicknameIndex);
+            } else {
+                return "";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "error";
+        }
+
+        return nickname;
+    }
+
+    private String[] getContactAddress(int contactId) {
+        Uri postal_uri = ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_URI;
+        Cursor postal_cursor  = getContentResolver().query(postal_uri,null,  ContactsContract.Data.CONTACT_ID + "="+contactId, null,null);
+        String streetCityArray[] = new String[2];
+        String street = "";
+        String city = "";
+        while(postal_cursor.moveToNext())
+        {
+            street = postal_cursor.getString(postal_cursor.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.STREET));
+            city = postal_cursor.getString(postal_cursor.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.CITY));
+        }
+        postal_cursor.close();
+
+        streetCityArray[0] = street;
+        streetCityArray[1] = city;
+
+        return streetCityArray;
     }
 }

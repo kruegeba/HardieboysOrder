@@ -34,6 +34,47 @@ public class InvoiceItem {
         return quantity + item.getDescription() + "$" + String.format("%.2f", total);
     }
 
+    public String getPrintOutLine(){
+        String quantityString = String.valueOf(quantity);
+        String descriptionString = item.getDescription();
+        String itemPriceString = "$" + String.format("%.2f", item.getPrice());
+        String totalPriceString = "$" + String.format("%.2f", total);
+
+        //Will always be max length of 3 with 3 trailing space
+        if(quantityString.length() == 1){
+            quantityString = "  " + quantityString;
+        }else if(quantityString.length() == 2){
+            quantityString = " " + quantityString;
+        }
+        quantityString = quantityString + "   ";
+
+        //Will always be max length of 17 with 3 trailing spaces
+        if(descriptionString.length() > 17){
+            descriptionString = descriptionString.substring(0, 17);
+        }else{
+            while(descriptionString.length() < 17){
+                descriptionString = descriptionString + " ";
+            }
+        }
+        descriptionString = descriptionString + "   ";
+
+        //Will always be max of 7 with 1 trailing spaces
+        while(itemPriceString.length() < 7){
+            itemPriceString = itemPriceString + " ";
+        }
+        itemPriceString = itemPriceString + " ";
+
+        if(totalPriceString.length() == 7){
+            totalPriceString = " " + totalPriceString;
+        }else if(totalPriceString.length() == 6){
+            totalPriceString = "  " + totalPriceString;
+        }else if(totalPriceString.length() == 5){
+            totalPriceString = "   " + totalPriceString;
+        }
+
+        return quantityString + descriptionString + itemPriceString + totalPriceString;
+    }
+
     public int getInvoiceItemID() {
         return invoiceItemID;
     }

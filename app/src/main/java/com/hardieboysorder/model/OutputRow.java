@@ -135,9 +135,14 @@ public class OutputRow {
     }
 
     private double calculateWithoutGST(){
-        double gstAmount = (itemPrice * 3)/23;
+        double gstAmount = (itemPrice * 3) / 23;
         double amount = itemPrice - gstAmount;
         amount *= quantity;
+
+        if(discount != 0) {
+           double discountAmount = (amount * ((double)discount/100));
+           amount -= discountAmount;
+        }
 
         return round(amount, 2);
     }

@@ -37,8 +37,17 @@ public class InvoiceItem {
     public String getPrintOutLine(){
         String quantityString = String.valueOf(quantity);
         String descriptionString = item.getDescription();
-        String itemPriceString = "$" + String.format("%.2f", item.getPrice());
-        String totalPriceString = "$" + String.format("%.2f", total);
+        String itemPriceString, totalPriceString;
+
+        if(discount > 0){
+            double discountedTotal =  total - (total * ((double)discount/100));
+            totalPriceString = "$" + String.format("%.2f", discountedTotal);
+
+            itemPriceString = "$" + String.format("%.2f", discountedTotal/(double)quantity);
+        }else{
+            itemPriceString = "$" + String.format("%.2f", item.getPrice());
+            totalPriceString = "$" + String.format("%.2f", total);
+        }
 
         //Will always be max length of 3 with 3 trailing space
         if(quantityString.length() == 1){

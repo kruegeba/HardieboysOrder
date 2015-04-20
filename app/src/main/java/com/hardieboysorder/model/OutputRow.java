@@ -30,7 +30,7 @@ public class OutputRow {
     public String toString(){
         StringBuilder outputString = new StringBuilder();
 
-        outputString.append(String.valueOf(invoiceID));
+        outputString.append(formatInvoiceForReceipt(invoiceID));
         outputString.append("\t");
         try{
             Date formattedDate = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").parse(date);
@@ -93,9 +93,10 @@ public class OutputRow {
     }
 
     public void setGross(double gross) {
-        double gstAmount = (gross * 3)/23;
-        double amount = gross - gstAmount;
-        this.gross = round(amount, 2);
+        this.gross = gross;
+        //double gstAmount = (gross * 3)/23;
+        //double amount = gross - gstAmount;
+        //this.gross = round(amount, 2);
     }
 
     public double getNet() {
@@ -153,5 +154,16 @@ public class OutputRow {
         BigDecimal bd = new BigDecimal(value);
         bd = bd.setScale(places, RoundingMode.HALF_UP);
         return bd.doubleValue();
+    }
+
+    private String formatInvoiceForReceipt(int invoiceId){
+        String outputString = String.valueOf(invoiceId);
+
+        while(outputString.length() < 6){
+            outputString = "0" + outputString;
+        }
+
+        return "A" + outputString;
+
     }
 }

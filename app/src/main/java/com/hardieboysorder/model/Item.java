@@ -96,4 +96,19 @@ public class Item {
         this.isActive = isActive;
     }
 
+    public String getInsertString(){
+        String sql = "INSERT INTO Item VALUES(";
+
+        sql += itemID + ",";
+        sql += "'" + code + "',";
+        sql += "'" + description + "',";
+        sql += price + ",";
+        sql += "null,";
+        sql += iconOrder + ",";
+        sql += isActive;
+
+        sql += ");";
+
+        return sql;
+    }
 }

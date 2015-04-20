@@ -38,7 +38,7 @@ public class OptionsTabActivity extends Activity {
 
     HardieboysOrderDB db;
     RadioButton todayRadioButton, rangeRadioButton;
-    Button startButton, endButton, emailButton;
+    Button startButton, endButton, emailButton, backupFileEmailButton;
     static TextView startTextView, endTextView;
 
     public void onCreate(Bundle savedInstanceState) {
@@ -134,6 +134,14 @@ public class OptionsTabActivity extends Activity {
                         }
                     }
                 }
+            }
+        });
+
+        backupFileEmailButton = (Button)findViewById(R.id.backupFileEmailButton);
+        backupFileEmailButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendEmailWithAttachment(db.createBackupFile());
             }
         });
 

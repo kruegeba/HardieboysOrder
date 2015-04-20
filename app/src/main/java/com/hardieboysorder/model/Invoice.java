@@ -54,4 +54,17 @@ public class Invoice {
         this.date = date;
     }
 
+    public String getInsertString(){
+        String sql = "INSERT INTO Invoice VALUES(";
+
+        sql += invoiceID + ",";
+        sql += contactID + ",";
+        sql += grandTotal + ",";
+        sql += "'" + date + "'";
+
+        sql += ");";
+
+        return sql;
+    }
+
 }

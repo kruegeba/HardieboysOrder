@@ -139,4 +139,19 @@ public class InvoiceItem {
     public double getDiscountAmount(){
         return total * (double)discount / 100;
     }
+
+    public String getInsertString(){
+        String sql = "INSERT INTO InvoiceItem VALUES(";
+
+        sql += invoiceItemID + ",";
+        sql += invoiceID + ",";
+        sql += itemID + ",";
+        sql += quantity + ",";
+        sql += discount + ",";
+        sql += total;
+
+        sql += ");";
+
+        return sql;
+    }
 }

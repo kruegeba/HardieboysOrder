@@ -5,10 +5,15 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.content.ContentValues;
+import android.os.Environment;
 import android.provider.ContactsContract;
 
 import com.hardieboysorder.model.*;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -712,6 +717,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
 
         // 1. build the query
         StringBuilder query = new StringBuilder();
+
         query.append("SELECT ");
         query.append("Inv.InvoiceID, ");
         query.append("Inv.Date, ");
@@ -747,7 +753,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
                 outputRow.setQuantity(cursor.getInt(4));
                 outputRow.setDiscount(cursor.getInt(5));
                 outputRow.setContactID(cursor.getInt(6));
-                outputRow.setItemPrice(cursor.getInt(7));
+                outputRow.setItemPrice(cursor.getDouble(7));
                 outputRow.setNet(cursor.getDouble(8));
 
                 outputRows.add(outputRow);
@@ -757,5 +763,46 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         db.close();
 
         return outputRows;
+    }
+
+    public String createBackupFile(){
+        FileOutputStream fos;
+        File file;
+        String fileName = "Backup File " + new SimpleDateFormat("d-M-yyyy").format(new Date()) + ".txt";
+        try {
+            file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+File.separator+fileName);
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file));
+
+            ArrayList<Item> allItems = getAllItems();
+            ArrayList<InvoiceItem> allInvoiceItems = getAllInvoiceItems();
+            ArrayList<Invoice> allInvoices = getAllInvoices();
+
+            for (Item item : allItems){
+                bufferedWriter.write(item.getInsertString());
+                bufferedWriter.write("\n");
+            }
+
+            bufferedWriter.write("\n");
+
+            for (InvoiceItem invoiceItem : allInvoiceItems){
+                bufferedWriter.write(invoiceItem.getInsertString());
+                bufferedWriter.write("\n");
+            }
+
+            bufferedWriter.write("\n");
+
+            for (Invoice invoice : allInvoices){
+                bufferedWriter.write(invoice.getInsertString());
+                bufferedWriter.write("\n");
+            }
+
+            bufferedWriter.flush();
+            bufferedWriter.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return fileName;
     }
 }

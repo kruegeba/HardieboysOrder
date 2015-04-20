@@ -8,7 +8,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.net.Uri;
@@ -84,8 +86,9 @@ public class InvoicesTabActivity extends Activity {
             loadMostRecentInvoice();
             loadInvoiceItems();
             handleNavButtons();
-            comingFromContactSelect = false;
         }
+
+        comingFromContactSelect = false;
     }
 
     private void initializeViews() {
@@ -152,6 +155,7 @@ public class InvoicesTabActivity extends Activity {
         printImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                db.createBackupFile();
                 getContactAddress(currentInvoice.getContactID());
                 if (!mConnected) {
                     mBixolonPrinter.findUsbPrinters();
@@ -360,7 +364,7 @@ public class InvoicesTabActivity extends Activity {
             db.addInvoice(currentInvoice);
         }
 
-        invoiceTextView.setText("#" + currentInvoice.getInvoiceID());
+        invoiceTextView.setText("#" + formatInvoiceForReceipt(currentInvoice.getInvoiceID()));
         contactTextView.setText(getContactName(currentInvoice.getContactID()));
         dateTextView.setText(new SimpleDateFormat("d-M-yyyy h:mm a").format(currentInvoice.getDate()));
         invoiceGrandTotalTextView.setText("$" + String.format("%.2f", currentInvoice.getGrandTotal()));
@@ -369,7 +373,7 @@ public class InvoicesTabActivity extends Activity {
 
     private void loadInvoice(Invoice invoice) {
         currentInvoice = invoice;
-        invoiceTextView.setText("#" + currentInvoice.getInvoiceID());
+        invoiceTextView.setText("#" + formatInvoiceForReceipt(currentInvoice.getInvoiceID()));
         contactTextView.setText(getContactName(currentInvoice.getContactID()));
         dateTextView.setText(new SimpleDateFormat("d-M-yyyy h:mm a").format(currentInvoice.getDate()));
         invoiceGrandTotalTextView.setText("$" + String.format("%.2f", currentInvoice.getGrandTotal()));
@@ -464,9 +468,10 @@ public class InvoicesTabActivity extends Activity {
                         db.updateInvoice(currentInvoice);
                         contactTextView.setText(getContactName(currentInvoice.getContactID()));
                         //String q = c.getString(c.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-                        comingFromContactSelect = true;
                     }
                 }
+
+                comingFromContactSelect = true;
         }
     }
 
@@ -630,6 +635,8 @@ public class InvoicesTabActivity extends Activity {
         int center = BixolonPrinter.ALIGNMENT_CENTER;
         int right = BixolonPrinter.ALIGNMENT_RIGHT;
 
+        int bold = BixolonPrinter.TEXT_ATTRIBUTE_EMPHASIZED;
+        bold |= BixolonPrinter.TEXT_ATTRIBUTE_FONT_A;
         int attribute = BixolonPrinter.TEXT_ATTRIBUTE_FONT_A;
         int underline = BixolonPrinter.TEXT_ATTRIBUTE_FONT_A;
         underline |= BixolonPrinter.TEXT_ATTRIBUTE_UNDERLINE2;
@@ -639,41 +646,42 @@ public class InvoicesTabActivity extends Activity {
 
         ArrayList<InvoiceItem> currentInvoiceItems = db.getInvoiceItemsForInvoice(currentInvoice.getInvoiceID());
 
-        mBixolonPrinter.printText("HARDIEBOYS BEVERAGES", center, attribute, size, false);
-        mBixolonPrinter.lineFeed(1, false);
+        printLogo();
+        mBixolonPrinter.lineFeed(2, false);
+        mBixolonPrinter.printText("HARDIEBOYS BEVERAGES", center, bold, size, false);
+        mBixolonPrinter.lineFeed(2, false);
         mBixolonPrinter.printText("PO BOX 27413", center, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
         mBixolonPrinter.printText("WELLINGTON", center, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
         mBixolonPrinter.printText("TEL 021647528", center, attribute, size, false);
-        mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("TAX INVOICE GST NO.18475243", center, attribute, size, false);
-        mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("GST INCL", center, attribute, size, false);
         mBixolonPrinter.lineFeed(2, false);
-        mBixolonPrinter.printText("ORDER #:   " + currentInvoice.getInvoiceID(), left, attribute, size, false);
+        mBixolonPrinter.printText("TAX INVOICE GST NO.18475243", center, attribute, size, false);
+        mBixolonPrinter.lineFeed(2, false);
+        mBixolonPrinter.printText("DATE:       " + new SimpleDateFormat("d-M-yyyy h:mm a").format(new Date()), left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("DATE:      " + dateTextView.getText().toString(), left, attribute, size, false);
+        mBixolonPrinter.printText("INVOICE No: ", left, attribute, size, false);
+        mBixolonPrinter.printText(formatInvoiceForReceipt(currentInvoice.getInvoiceID()), bold, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("SOLD TO:   " + getContactName(currentInvoice.getContactID()).toUpperCase(), left, attribute, size, false);
+        mBixolonPrinter.printText("SOLD TO:    " + getContactName(currentInvoice.getContactID()).toUpperCase(), left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
 
         String[] cityStateArray = getContactAddress(currentInvoice.getContactID());
 
-        mBixolonPrinter.printText("           " + cityStateArray[0].toUpperCase(), left, attribute, size, false);
+        mBixolonPrinter.printText("            " + cityStateArray[0].toUpperCase(), left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("           " + cityStateArray[1].toUpperCase(), left, attribute, size, false);
+        mBixolonPrinter.printText("            " + cityStateArray[1].toUpperCase(), left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("ACCOUNT:   " + getContactNickname(currentInvoice.getContactID()), left, attribute, size, false);
+        mBixolonPrinter.printText("ACCOUNT:    " + getContactNickname(currentInvoice.getContactID()), left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("PAYMENT:   INVOICE", left, attribute, size, false);
+        mBixolonPrinter.printText("PAYMENT:    INVOICE", left, attribute, size, false);
         mBixolonPrinter.lineFeed(2, false);
         mBixolonPrinter.printText("QTY", left, underline, size, false);
         mBixolonPrinter.printText("   ", left, attribute, size, false);
         mBixolonPrinter.printText("DESC", left, underline, size, false);
         mBixolonPrinter.printText("                ", right, attribute, size, false);
-        mBixolonPrinter.printText("PRICE@", left, underline, size, false);
-        mBixolonPrinter.printText("     ", left, attribute, size, false);
+        mBixolonPrinter.printText("UNIT", left, underline, size, false);
+        mBixolonPrinter.printText("      ", left, attribute, size, false);
         mBixolonPrinter.printText("PRICE", left, underline, size, false);
         mBixolonPrinter.lineFeed(1, false);
 
@@ -687,16 +695,16 @@ public class InvoicesTabActivity extends Activity {
             subtotalString = " " + subtotalString;
         }
 
-        String totalString = "TOTAL: $" + String.format("%.2f", currentInvoice.getGrandTotal());
+        String totalString = "TOTAL INVOICE (GST INCLUDED): $" + String.format("%.2f", currentInvoice.getGrandTotal());
         while (totalString.length() < 42) {
             totalString = " " + totalString;
         }
 
-        mBixolonPrinter.printText(subtotalString, left, attribute, size, false);
+        //mBixolonPrinter.printText(subtotalString, left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText(totalString, left, attribute, size, false);
+        mBixolonPrinter.printText(totalString, left, bold, size, false);
         mBixolonPrinter.lineFeed(2, false);
-        mBixolonPrinter.printText("THANK YOU FOR YOUR ORDER!", center, attribute, size, false);
+        mBixolonPrinter.printText("WHOLEFOOD IS HEALTHY FOOD!", center, bold, size, false);
         mBixolonPrinter.lineFeed(7, false);
 
         mBixolonPrinter.cutPaper(false);
@@ -804,5 +812,27 @@ public class InvoicesTabActivity extends Activity {
         streetCityArray[1] = city;
 
         return streetCityArray;
+    }
+
+    private String formatInvoiceForReceipt(int invoiceId){
+        String outputString = String.valueOf(invoiceId);
+
+        while(outputString.length() < 6){
+            outputString = "0" + outputString;
+        }
+
+        return "A" + outputString;
+
+    }
+
+    private void printLogo() {
+        BitmapDrawable drawable = (BitmapDrawable) getResources().getDrawable(R.drawable.logo);
+        Bitmap bitmap = drawable.getBitmap();
+
+        int mAlignment = BixolonPrinter.ALIGNMENT_CENTER;
+
+        int width = 0;
+
+        mBixolonPrinter.printBitmap(bitmap, mAlignment, width, 25, false, false, true);
     }
 }

@@ -831,13 +831,15 @@ public class InvoicesTabActivity extends Activity {
     }
 
     private void printLogo() {
-        BitmapDrawable drawable = (BitmapDrawable) getResources().getDrawable(R.drawable.logo);
-        Bitmap bitmap = drawable.getBitmap();
+        String pathName = "/storage/emulated/0/Pictures/logo.png";
+        //BitmapDrawable drawable = (BitmapDrawable) getResources().getDrawable(R.drawable.logo);
+        //Bitmap bitmap = drawable.getBitmap();
 
         int mAlignment = BixolonPrinter.ALIGNMENT_CENTER;
 
         int width = 0;
 
-        mBixolonPrinter.printBitmap(bitmap, mAlignment, width, 25, false, false, true);
+        //mBixolonPrinter.printBitmap(bitmap, mAlignment, width, 25, false, false, true);
+        mBixolonPrinter.printBitmap(pathName, mAlignment, width, 25, false, false, true);
     }
 }

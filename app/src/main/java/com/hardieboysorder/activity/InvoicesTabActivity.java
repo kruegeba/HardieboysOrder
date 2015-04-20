@@ -651,7 +651,7 @@ public class InvoicesTabActivity extends Activity {
 
         printLogo();
         mBixolonPrinter.lineFeed(2, false);
-        mBixolonPrinter.printText("HARDIEBOYS BEVERAGES", center, bold, large, false);
+        mBixolonPrinter.printText("HARDIEBOYS BEVERAGES", center, attribute, large, false);
         mBixolonPrinter.lineFeed(2, false);
         mBixolonPrinter.printText("PO BOX 27413", center, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
@@ -659,12 +659,13 @@ public class InvoicesTabActivity extends Activity {
         mBixolonPrinter.lineFeed(1, false);
         mBixolonPrinter.printText("TEL 021647528", center, attribute, size, false);
         mBixolonPrinter.lineFeed(2, false);
-        mBixolonPrinter.printText("TAX INVOICE GST NO.18475243", center, attribute, size, false);
+        mBixolonPrinter.printText("TAX INVOICE ", center, bold, size, false);
+        mBixolonPrinter.printText("GST NO. 18475243", center, attribute, size, false);
         mBixolonPrinter.lineFeed(2, false);
         mBixolonPrinter.printText("DATE:       " + new SimpleDateFormat("d-M-yyyy h:mm a").format(new Date()), left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
         mBixolonPrinter.printText("INVOICE No: ", left, attribute, size, false);
-        mBixolonPrinter.printText(formatInvoiceForReceipt(currentInvoice.getInvoiceID()), bold, attribute, size, false);
+        mBixolonPrinter.printText(formatInvoiceForReceipt(currentInvoice.getInvoiceID()), left, bold, size, false);
         mBixolonPrinter.lineFeed(1, false);
         mBixolonPrinter.printText("SOLD TO:    " + getContactName(currentInvoice.getContactID()).toUpperCase(), left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
@@ -701,7 +702,7 @@ public class InvoicesTabActivity extends Activity {
         mBixolonPrinter.lineFeed(2, false);
         mBixolonPrinter.printText("TOTAL INVOICE", left, bold, size, false);
         mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("   (GST INC):", left, bold, size, false);
+        mBixolonPrinter.printText("    GST INCL:", left, bold, size, false);
         String totalString = "$" + String.format("%.2f", currentInvoice.getGrandTotal());
         while (totalString.length() < 29) {
             totalString = " " + totalString;

@@ -641,6 +641,9 @@ public class InvoicesTabActivity extends Activity {
         int underline = BixolonPrinter.TEXT_ATTRIBUTE_FONT_A;
         underline |= BixolonPrinter.TEXT_ATTRIBUTE_UNDERLINE2;
 
+        int large = BixolonPrinter.TEXT_SIZE_HORIZONTAL2;
+        large |= BixolonPrinter.TEXT_SIZE_VERTICAL2;
+
         int size = BixolonPrinter.TEXT_SIZE_HORIZONTAL1;
         size |= BixolonPrinter.TEXT_SIZE_VERTICAL1;
 
@@ -648,7 +651,7 @@ public class InvoicesTabActivity extends Activity {
 
         printLogo();
         mBixolonPrinter.lineFeed(2, false);
-        mBixolonPrinter.printText("HARDIEBOYS BEVERAGES", center, bold, size, false);
+        mBixolonPrinter.printText("HARDIEBOYS BEVERAGES", center, bold, large, false);
         mBixolonPrinter.lineFeed(2, false);
         mBixolonPrinter.printText("PO BOX 27413", center, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
@@ -672,10 +675,10 @@ public class InvoicesTabActivity extends Activity {
         mBixolonPrinter.lineFeed(1, false);
         mBixolonPrinter.printText("            " + cityStateArray[1].toUpperCase(), left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("ACCOUNT:    " + getContactNickname(currentInvoice.getContactID()), left, attribute, size, false);
+        mBixolonPrinter.printText("NAME CODE:  " + getContactNickname(currentInvoice.getContactID()), left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
-        mBixolonPrinter.printText("PAYMENT:    INVOICE", left, attribute, size, false);
-        mBixolonPrinter.lineFeed(2, false);
+        mBixolonPrinter.printText("TYPE:       INVOICE", left, attribute, size, false);
+        mBixolonPrinter.lineFeed(4, false);
         mBixolonPrinter.printText("QTY", left, underline, size, false);
         mBixolonPrinter.printText("   ", left, attribute, size, false);
         mBixolonPrinter.printText("DESC", left, underline, size, false);
@@ -695,15 +698,16 @@ public class InvoicesTabActivity extends Activity {
             subtotalString = " " + subtotalString;
         }
 
-        String totalString = "TOTAL INVOICE (GST INCLUDED): $" + String.format("%.2f", currentInvoice.getGrandTotal());
-        while (totalString.length() < 42) {
+        mBixolonPrinter.lineFeed(2, false);
+        mBixolonPrinter.printText("TOTAL INVOICE", left, bold, size, false);
+        mBixolonPrinter.lineFeed(1, false);
+        mBixolonPrinter.printText("   (GST INC):", left, bold, size, false);
+        String totalString = "$" + String.format("%.2f", currentInvoice.getGrandTotal());
+        while (totalString.length() < 29) {
             totalString = " " + totalString;
         }
-
-        //mBixolonPrinter.printText(subtotalString, left, attribute, size, false);
-        mBixolonPrinter.lineFeed(1, false);
         mBixolonPrinter.printText(totalString, left, bold, size, false);
-        mBixolonPrinter.lineFeed(2, false);
+        mBixolonPrinter.lineFeed(4, false);
         mBixolonPrinter.printText("WHOLEFOOD IS HEALTHY FOOD!", center, bold, size, false);
         mBixolonPrinter.lineFeed(7, false);
 

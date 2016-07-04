@@ -257,6 +257,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
 
         // 2. create ContentValues to add key "column"/value
         ContentValues values = new ContentValues();
+        values.put("InvoiceID", invoice.getInvoiceID());
         values.put("ContactID", invoice.getContactID());
         values.put("GrandTotal", invoice.getGrandTotal());
         values.put("Date", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(invoice.getDate()));
@@ -512,7 +513,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         db.close();
     }
 
-    public void addTestData(){
+    public void preloadData(){
         addItem(new Item("DGB330", "Dry Ginger Beer", 3.50, null, 1, 1));
         addItem(new Item("L330", "Lemonade", 3.50, null, 2, 1));
         addItem(new Item("LIME330", "Lime", 3.50, null, 3, 1));
@@ -617,6 +618,30 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
 
         // 5. return
         return invoice;
+    }
+
+    public int getFirstInvoiceID(){
+
+        int invoiceID = -1;
+        String[] columns = {"InvoiceID", "ContactID", "GrandTotal", "Date"};
+
+        // 1. get reference to readable DB
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String sql = "SELECT InvoiceID FROM Invoice ORDER BY InvoiceID ASC LIMIT 1";
+
+        // 2. build query
+        Cursor cursor = db.rawQuery(sql, null);
+
+        // 3. if we got results get the first one
+        if(cursor.getCount() > 0) {
+            cursor.moveToFirst();
+            invoiceID = cursor.getInt(0);
+        }
+
+        db.close();
+
+        return invoiceID;
     }
 
     public ArrayList<InvoiceItem> getInvoiceItemsForInvoice(int invoiceID) {

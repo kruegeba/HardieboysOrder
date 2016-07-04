@@ -15,6 +15,7 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.ContactsContract;
@@ -41,6 +42,9 @@ import com.hardieboysorder.model.Item;
 import com.hardieboysorder.widget.ItemButton;
 import com.hardieboysorder.widget.NumberButton;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -62,13 +66,16 @@ public class InvoicesTabActivity extends Activity {
     boolean comingFromContactSelect = false;
     boolean mConnected = false;
     static BixolonPrinter mBixolonPrinter;
+    String orderPrefix = "";
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.invoices_tab_activity);
 
         db = new HardieboysOrderDB(this);
-        //db.addTestData();
+        if(db.getAllItems().size() == 0){
+            db.preloadData();
+        }
 
         initializeViews();
         initializeClickEvents();
@@ -115,7 +122,8 @@ public class InvoicesTabActivity extends Activity {
         backImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (currentInvoice.getInvoiceID() != 1) {
+                int firstInvoiceID = db.getFirstInvoiceID();
+                if (currentInvoice.getInvoiceID() != firstInvoiceID) {
                     loadInvoice(db.getInvoice(currentInvoice.getInvoiceID() - 1));
                     loadInvoiceItems();
                 }
@@ -124,12 +132,26 @@ public class InvoicesTabActivity extends Activity {
             }
         });
 
+        backImageButton.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                int firstInvoiceID = db.getFirstInvoiceID();
+                if (currentInvoice.getInvoiceID() != firstInvoiceID) {
+                    loadInvoice(db.getInvoice(firstInvoiceID));
+                    loadInvoiceItems();
+                }
+
+                handleNavButtons();
+                return true;
+            }
+        });
+
         forwardImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (currentInvoice.getInvoiceID() == mostRecentInvoiceID) {
                     if (currentInvoice.getContactID() != -1 || invoiceItemAdapter.getCount() > 0) {
-                        Invoice newInvoice = new Invoice(-1, 0, new Date());
+                        Invoice newInvoice = new Invoice(currentInvoice.getInvoiceID() + 1, -1, 0, new Date());
 
                         db.addInvoice(newInvoice);
                         loadMostRecentInvoice();
@@ -141,6 +163,19 @@ public class InvoicesTabActivity extends Activity {
                     loadInvoiceItems();
                     handleNavButtons();
                 }
+            }
+        });
+
+        forwardImageButton.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                if (currentInvoice.getInvoiceID() != mostRecentInvoiceID) {
+                    loadMostRecentInvoice();
+                    loadInvoiceItems();
+                    handleNavButtons();
+                }
+
+                return true;
             }
         });
 
@@ -233,6 +268,10 @@ public class InvoicesTabActivity extends Activity {
                             selectedItemButton.getBackground().setAlpha(128);
 
                             if (pressedItemButton != null && pressedNumberButton != null) {
+                                if(db.getInvoiceItemsForInvoice(currentInvoice.getInvoiceID()).size() == 0){
+                                    currentInvoice.setDate(new Date());
+                                }
+
                                 InvoiceItem newInvoiceItem = new InvoiceItem();
                                 newInvoiceItem.setInvoiceID(currentInvoice.getInvoiceID());
                                 newInvoiceItem.setItemID(pressedItemButton.getItem().getItemID());
@@ -257,6 +296,7 @@ public class InvoicesTabActivity extends Activity {
                                 pressedNumberButton.getBackground().setAlpha(255);
                                 pressedNumberButton = null;
 
+                                loadInvoice(currentInvoice);
                                 loadInvoiceItems();
                             }
                         }
@@ -317,6 +357,10 @@ public class InvoicesTabActivity extends Activity {
                         pressedNumberButton.getBackground().setAlpha(128);
 
                         if (pressedItemButton != null && pressedNumberButton != null) {
+                            if(db.getInvoiceItemsForInvoice(currentInvoice.getInvoiceID()).size() == 0){
+                                currentInvoice.setDate(new Date());
+                            }
+
                             InvoiceItem newInvoiceItem = new InvoiceItem();
                             newInvoiceItem.setInvoiceID(currentInvoice.getInvoiceID());
                             newInvoiceItem.setItemID(pressedItemButton.getItem().getItemID());
@@ -337,6 +381,7 @@ public class InvoicesTabActivity extends Activity {
                             pressedNumberButton.getBackground().setAlpha(255);
                             pressedNumberButton = null;
 
+                            loadInvoice(currentInvoice);
                             loadInvoiceItems();
                         }
                     }
@@ -352,15 +397,24 @@ public class InvoicesTabActivity extends Activity {
             }
         });
         numberButtonLayout.addView(otherNumberButton);
-
-
     }
 
     private void loadMostRecentInvoice() {
         currentInvoice = db.getMostRecentInvoice();
 
+        int startInvoiceID;
+        try{
+            File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+File.separator+"HardieBoysOrderStart.txt");
+            BufferedReader fileReader = new BufferedReader(new FileReader(file));
+            orderPrefix = fileReader.readLine();
+            startInvoiceID = Integer.parseInt(fileReader.readLine());
+        }catch(Exception e){
+            startInvoiceID = 1;
+            orderPrefix = "";
+        }
+
         if (currentInvoice == null) {
-            currentInvoice = new Invoice(1, -1, 0, new Date());
+            currentInvoice = new Invoice(startInvoiceID, -1, 0, new Date());
             db.addInvoice(currentInvoice);
         }
 
@@ -662,7 +716,7 @@ public class InvoicesTabActivity extends Activity {
         mBixolonPrinter.printText("TAX INVOICE ", center, bold, size, false);
         mBixolonPrinter.printText("GST NO. 18475243", center, attribute, size, false);
         mBixolonPrinter.lineFeed(2, false);
-        mBixolonPrinter.printText("DATE:       " + new SimpleDateFormat("d-M-yyyy h:mm a").format(new Date()), left, attribute, size, false);
+        mBixolonPrinter.printText("DATE:       " + new SimpleDateFormat("d-M-yyyy h:mm a").format(currentInvoice.getDate()), left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
         mBixolonPrinter.printText("INVOICE No: ", left, attribute, size, false);
         mBixolonPrinter.printText(formatInvoiceForReceipt(currentInvoice.getInvoiceID()), left, bold, size, false);
@@ -826,7 +880,7 @@ public class InvoicesTabActivity extends Activity {
             outputString = "0" + outputString;
         }
 
-        return "A" + outputString;
+        return orderPrefix + outputString;
 
     }
 

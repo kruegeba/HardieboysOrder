@@ -1,5 +1,10 @@
 package com.hardieboysorder.model;
 
+import android.os.Environment;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
@@ -158,12 +163,20 @@ public class OutputRow {
 
     private String formatInvoiceForReceipt(int invoiceId){
         String outputString = String.valueOf(invoiceId);
+        String orderPrefix = "";
+
+        try{
+            File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+File.separator+"HardieBoysOrderStart.txt");
+            BufferedReader fileReader = new BufferedReader(new FileReader(file));
+            orderPrefix = fileReader.readLine();
+        }catch(Exception e){
+        }
 
         while(outputString.length() < 6){
             outputString = "0" + outputString;
         }
 
-        return "A" + outputString;
+        return orderPrefix + outputString;
 
     }
 }

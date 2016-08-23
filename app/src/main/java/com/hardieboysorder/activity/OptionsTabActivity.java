@@ -87,7 +87,7 @@ public class OptionsTabActivity extends Activity {
                 String fileName = "";
 
                 if(todayRadioButton.isChecked()){
-                    fileName = createAccountingFile(new Date());
+                    fileName = createAccountingFile();
 
                     if(fileName.equals("")){
                         new AlertDialog.Builder(v.getContext())
@@ -265,15 +265,15 @@ public class OptionsTabActivity extends Activity {
         }
     }
 
-    private String createAccountingFile(Date date){
+    private String createAccountingFile(){
         FileOutputStream fos;
         File file;
-        String fileName = "Accounting File " + new SimpleDateFormat("d-M-yyyy").format(date) + ".txt";
+        String fileName = "Accounting File " + new SimpleDateFormat("d-M-yyyy").format(new Date()) + ".txt";
         try {
             file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+File.separator+fileName);
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file));
             bufferedWriter.write(createHeaderRow());
-            ArrayList<OutputRow> outputRows = db.getOutputRows(date);
+            ArrayList<OutputRow> outputRows = db.getOutputRows();
 
             if(outputRows.size() == 0){
                 file.delete();

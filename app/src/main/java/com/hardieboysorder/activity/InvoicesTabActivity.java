@@ -151,7 +151,7 @@ public class InvoicesTabActivity extends Activity {
             public void onClick(View v) {
                 if (currentInvoice.getInvoiceID() == mostRecentInvoiceID) {
                     if (currentInvoice.getContactID() != -1 || invoiceItemAdapter.getCount() > 0) {
-                        Invoice newInvoice = new Invoice(currentInvoice.getInvoiceID() + 1, -1, 0, new Date());
+                        Invoice newInvoice = new Invoice(currentInvoice.getInvoiceID() + 1, -1, 0, (int)(System.currentTimeMillis() / 1000L));
 
                         db.addInvoice(newInvoice);
                         loadMostRecentInvoice();
@@ -269,7 +269,7 @@ public class InvoicesTabActivity extends Activity {
 
                             if (pressedItemButton != null && pressedNumberButton != null) {
                                 if(db.getInvoiceItemsForInvoice(currentInvoice.getInvoiceID()).size() == 0){
-                                    currentInvoice.setDate(new Date());
+                                    currentInvoice.setDate((int)(System.currentTimeMillis() / 1000L));
                                 }
 
                                 InvoiceItem newInvoiceItem = new InvoiceItem();
@@ -358,7 +358,7 @@ public class InvoicesTabActivity extends Activity {
 
                         if (pressedItemButton != null && pressedNumberButton != null) {
                             if(db.getInvoiceItemsForInvoice(currentInvoice.getInvoiceID()).size() == 0){
-                                currentInvoice.setDate(new Date());
+                                currentInvoice.setDate((int)(System.currentTimeMillis() / 1000L));
                             }
 
                             InvoiceItem newInvoiceItem = new InvoiceItem();
@@ -414,13 +414,14 @@ public class InvoicesTabActivity extends Activity {
         }
 
         if (currentInvoice == null) {
-            currentInvoice = new Invoice(startInvoiceID, -1, 0, new Date());
+            currentInvoice = new Invoice(startInvoiceID, -1, 0, (int)(System.currentTimeMillis() / 1000L));
             db.addInvoice(currentInvoice);
         }
 
         invoiceTextView.setText("#" + formatInvoiceForReceipt(currentInvoice.getInvoiceID()));
         contactTextView.setText(getContactName(currentInvoice.getContactID()));
-        dateTextView.setText(new SimpleDateFormat("d-M-yyyy h:mm a").format(currentInvoice.getDate()));
+
+        dateTextView.setText(new SimpleDateFormat("d-M-yyyy h:mm a").format(new Date(currentInvoice.getDate()*1000L)));
         invoiceGrandTotalTextView.setText("$" + String.format("%.2f", currentInvoice.getGrandTotal()));
         mostRecentInvoiceID = currentInvoice.getInvoiceID();
     }
@@ -429,7 +430,7 @@ public class InvoicesTabActivity extends Activity {
         currentInvoice = invoice;
         invoiceTextView.setText("#" + formatInvoiceForReceipt(currentInvoice.getInvoiceID()));
         contactTextView.setText(getContactName(currentInvoice.getContactID()));
-        dateTextView.setText(new SimpleDateFormat("d-M-yyyy h:mm a").format(currentInvoice.getDate()));
+        dateTextView.setText(new SimpleDateFormat("d-M-yyyy h:mm a").format(currentInvoice.getDate()*1000L));
         invoiceGrandTotalTextView.setText("$" + String.format("%.2f", currentInvoice.getGrandTotal()));
     }
 

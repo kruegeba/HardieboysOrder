@@ -7,17 +7,17 @@ public class Invoice {
     private int invoiceID;
     private int contactID;
     private double grandTotal;
-    private Date date;
+    private int date;
 
     public Invoice(){ }
 
-    public Invoice(int contactID, double grandTotal, Date date){
+    public Invoice(int contactID, double grandTotal, int date){
         this.contactID = contactID;
         this.grandTotal = grandTotal;
         this.date = date;
     }
 
-    public Invoice(int invoiceID, int contactID, double grandTotal, Date date){
+    public Invoice(int invoiceID, int contactID, double grandTotal, int date){
         this(contactID, grandTotal, date);
         this.invoiceID = invoiceID;
     }
@@ -46,11 +46,11 @@ public class Invoice {
         this.grandTotal = grandTotal;
     }
 
-    public Date getDate() {
+    public int getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(int date) {
         this.date = date;
     }
 
@@ -60,7 +60,7 @@ public class Invoice {
         sql += invoiceID + ",";
         sql += contactID + ",";
         sql += grandTotal + ",";
-        sql += "'" + date + "'";
+        sql += date;
 
         sql += ");";
 

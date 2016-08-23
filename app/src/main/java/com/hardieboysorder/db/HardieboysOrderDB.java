@@ -14,9 +14,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Calendar;
 import java.util.Locale;
 
 public class HardieboysOrderDB extends SQLiteOpenHelper{
@@ -44,7 +46,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
                 "ContactID INTEGER, "+
                 "Type TEXT, "+
                 "GrandTotal INTEGER, "+
-                "Date DATETIME )";
+                "Date INTEGER )";
 
         String createOrderItemTableSQL = "CREATE TABLE InvoiceItem ( " +
                 "InvoiceItemID INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -260,7 +262,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         values.put("InvoiceID", invoice.getInvoiceID());
         values.put("ContactID", invoice.getContactID());
         values.put("GrandTotal", invoice.getGrandTotal());
-        values.put("Date", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(invoice.getDate()));
+        values.put("Date", invoice.getDate());
 
         // 3. insert
         db.insert("Invoice", // table
@@ -298,11 +300,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         invoice.setInvoiceID(cursor.getInt(0));
         invoice.setContactID(cursor.getInt(1));
         invoice.setGrandTotal(cursor.getDouble(2));
-        try{
-            invoice.setDate(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.ENGLISH).parse(cursor.getString(3)));
-        }catch(Exception e){
-            //Ignore for now
-        }
+        invoice.setDate(cursor.getInt(3));
 
         db.close();
 
@@ -328,13 +326,8 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
                 invoice.setInvoiceID(cursor.getInt(0));
                 invoice.setContactID(cursor.getInt(1));
                 invoice.setGrandTotal(cursor.getDouble(2));
-                try{
-                    invoice.setDate(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.ENGLISH).parse(cursor.getString(3)));
-                }catch(Exception e){
-                    //Ignore for now
-                }
+                invoice.setDate(cursor.getInt(3));
 
-                // Add book to books
                 invoices.add(invoice);
             } while (cursor.moveToNext());
         }
@@ -354,7 +347,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         ContentValues values = new ContentValues();
         values.put("ContactID", invoice.getContactID());
         values.put("GrandTotal", invoice.getGrandTotal());
-        values.put("Date", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(invoice.getDate()));
+        values.put("Date", invoice.getDate());
 
         // 3. updating row
         int i = db.update("Invoice", //table
@@ -607,11 +600,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
             invoice.setInvoiceID(cursor.getInt(0));
             invoice.setContactID(cursor.getInt(1));
             invoice.setGrandTotal(cursor.getDouble(2));
-            try {
-                invoice.setDate(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.ENGLISH).parse(cursor.getString(3)));
-            } catch (Exception e) {
-                //Ignore for now
-            }
+            invoice.setDate(cursor.getInt(3));
         }
 
         db.close();
@@ -679,14 +668,17 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         return invoiceItems;
     }
 
-    public ArrayList<OutputRow> getOutputRows(Date date) {
+    public ArrayList<OutputRow> getOutputRows() {
         ArrayList<OutputRow> outputRows = new ArrayList<OutputRow>();
         String dateString = "";
-        try{
-            dateString = new SimpleDateFormat("dd-MM-yyyy").format(date);
-        }catch(Exception e){
-            e.printStackTrace();
-        }
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+
+        int today = (int)(calendar.getTimeInMillis()/1000F);
 
         // 1. build the query
         StringBuilder query = new StringBuilder();
@@ -704,7 +696,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         query.append("Invoice Inv ");
         query.append("JOIN InvoiceItem InvItem ON Inv.InvoiceID = InvItem.InvoiceID ");
         query.append("JOIN Item Item ON InvItem.ItemID = Item.ItemID ");
-        query.append("WHERE Inv.Date > '" + dateString + "' ");
+        query.append("WHERE Inv.Date >= " + today + " ");
         query.append("ORDER BY Inv.InvoiceID ASC");
 
         // 2. get reference to writable DB
@@ -740,6 +732,24 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
     public ArrayList<OutputRow> getOutputRows(String startDate, String endDate) {
         ArrayList<OutputRow> outputRows = new ArrayList<OutputRow>();
 
+        int startTime = 0;
+        int endTime = 0;
+
+        try {
+            Date start = new SimpleDateFormat("dd-M-yyy").parse(startDate);
+            Date end = new SimpleDateFormat("dd-M-yyy").parse(endDate);
+
+            Calendar c = Calendar.getInstance();
+            c.setTime(end);
+
+            c.add(Calendar.DATE, 1);
+
+            startTime = (int)(start.getTime()/1000F);
+            endTime = (int)(c.getTime().getTime()/1000F);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
         // 1. build the query
         StringBuilder query = new StringBuilder();
 
@@ -757,7 +767,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
         query.append("Invoice Inv ");
         query.append("JOIN InvoiceItem InvItem ON Inv.InvoiceID = InvItem.InvoiceID ");
         query.append("JOIN Item Item ON InvItem.ItemID = Item.ItemID ");
-        query.append("WHERE Inv.Date BETWEEN '" + startDate + "' AND '" + endDate + "' ");
+        query.append("WHERE Inv.Date >= " + startTime + " AND Inv.Date < " + endTime + " ");
         query.append("ORDER BY Inv.InvoiceID ASC");
 
         // 2. get reference to writable DB

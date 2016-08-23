@@ -194,7 +194,7 @@ public class OptionsTabActivity extends Activity {
     private void sendEmailWithAttachment(String fileName){
         Intent emailIntent = new Intent(Intent.ACTION_SEND);
         emailIntent.setType("text/plain");
-        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {"ben.adams.krueger@gmail.com"});
+        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {"info@hardieboys.co.nz"});
         emailIntent.putExtra(Intent.EXTRA_SUBJECT, fileName);
 
         File root = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);

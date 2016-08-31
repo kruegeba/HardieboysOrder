@@ -16,7 +16,7 @@ import java.util.Date;
 public class OutputRow {
 
     private int invoiceID;
-    private String date;
+    private int date;
     private String type;
     private String nameCode;
     private double gross;
@@ -38,8 +38,8 @@ public class OutputRow {
         outputString.append(formatInvoiceForReceipt(invoiceID));
         outputString.append("\t");
         try{
-            Date formattedDate = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").parse(date);
-            outputString.append(new SimpleDateFormat("dd-MMM-yy").format(formattedDate));
+            outputString.append(new SimpleDateFormat("dd-MMM-yy").format(new Date(date * 1000L)));
+            //outputString.append(new SimpleDateFormat("dd-MMM-yy").format(formattedDate));
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -69,11 +69,11 @@ public class OutputRow {
         this.invoiceID = invoiceID;
     }
 
-    public String getDate() {
+    public int getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(int date) {
         this.date = date;
     }
 

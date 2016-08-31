@@ -710,7 +710,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
                 outputRow = new OutputRow();
 
                 outputRow.setInvoiceID(cursor.getInt(0));
-                outputRow.setDate(cursor.getString(1));
+                outputRow.setDate(cursor.getInt(1));
                 outputRow.setType("DI");
                 outputRow.setGross(cursor.getDouble(2));
                 outputRow.setItemCode(cursor.getString(3));
@@ -781,7 +781,7 @@ public class HardieboysOrderDB extends SQLiteOpenHelper{
                 outputRow = new OutputRow();
 
                 outputRow.setInvoiceID(cursor.getInt(0));
-                outputRow.setDate(cursor.getString(1));
+                outputRow.setDate(cursor.getInt(1));
                 outputRow.setType("DI");
                 outputRow.setGross(cursor.getDouble(2));
                 outputRow.setItemCode(cursor.getString(3));

@@ -717,7 +717,7 @@ public class InvoicesTabActivity extends Activity {
         mBixolonPrinter.printText("TAX INVOICE ", center, bold, size, false);
         mBixolonPrinter.printText("GST NO. 18475243", center, attribute, size, false);
         mBixolonPrinter.lineFeed(2, false);
-        mBixolonPrinter.printText("DATE:       " + new SimpleDateFormat("d-M-yyyy h:mm a").format(currentInvoice.getDate()), left, attribute, size, false);
+        mBixolonPrinter.printText("DATE:       " + (new SimpleDateFormat("d-M-yyyy h:mm a").format(new Date(currentInvoice.getDate()*1000L))), left, attribute, size, false);
         mBixolonPrinter.lineFeed(1, false);
         mBixolonPrinter.printText("INVOICE No: ", left, attribute, size, false);
         mBixolonPrinter.printText(formatInvoiceForReceipt(currentInvoice.getInvoiceID()), left, bold, size, false);
